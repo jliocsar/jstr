@@ -1,0 +1,27 @@
+{
+  "name": "jstr",
+  "version": "0.0.1",
+  "description": "",
+  "engineStrict": true,
+  "engines": {
+    "npm": ">=6.0.0",
+    "yarn": "please use npm"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "copy-paste": "latest",
+    "safe-eval": "latest",
+    "yargs": "latest"
+  },
+  "bin": "jstr",
+  "devDependencies": {
+    "pkg": "^5.8.1"
+  },
+  "scripts": {
+    "build": "pkg --compress GZip -o dist/jstr --options max-heap-size=34 .",
+    "postbuild": "sudo cp dist/jstr /usr/local/bin/jstr && sudo chmod +x /usr/local/bin/jstr"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

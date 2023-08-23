@@ -1,0 +1,84 @@
+#!/usr/bin/env node
+const fs = require('fs')
+const path = require('path')
+const { exit, cwd } = require('process')
+const ncp = require('copy-paste')
+const safeEval = require('safe-eval')
+
+const yargs = require('yargs/yargs')
+const { hideBin } = require('yargs/helpers')
+
+const directory = cwd()
+
+yargs(hideBin(process.argv))
+  .command(
+    '$0 <file> [parser]',
+    'parses and prints a JSON file in string version',
+    yargs =>
+      yargs
+        .positional('file', {
+          type: 'string',
+          describe: 'the file to read from',
+        })
+        .positional('parser', {
+          type: 'string',
+          describe: 'parser function to use',
+          default: null,
+        }),
+    ({ file, parser: parserstr, spaces, verbose, copy }) => {
+      const filePath = path.resolve(directory, file)
+      if (verbose) console.info('reading file', file)
+      if (verbose) console.info('full path:', filePath)
+      fs.readFile(path.resolve(directory, file), (error, buffer) => {
+        if (error) {
+          console.error(error.message)
+          exit(1)
+        }
+        const data = JSON.parse(buffer.toString())
+        if (verbose) console.info(`using ${spaces} spaces to stringify`)
+        const parser = parserstr ? safeEval(parserstr) : null
+        if (parser && typeof parser !== 'function') {
+          console.error('Parser must be of type function')
+          exit(1)
+        }
+        const output = JSON.stringify(
+          data,
+          parser ? (key, value) => parser(value) : null,
+          spaces,
+        )
+        if (copy) {
+          if (verbose) console.info('copying to clipboard')
+          ncp.copy(output)
+        } else {
+          console.log(output)
+        }
+        exit()
+      })
+    },
+  )
+  .strictCommands()
+  .demandCommand(1)
+  .option('spaces', {
+    alias: 's',
+    type: 'count',
+    description: 'number of spaces to add in the JSON output',
+    default: 0,
+  })
+  .option('verbose', {
+    alias: 'v',
+    type: 'boolean',
+    description: 'Run with verbose logging',
+  })
+  .option('copy', {
+    alias: 'c',
+    type: 'boolean',
+    description: 'Copy the output to the clipboard',
+  })
+  .example('$0 package.json', 'prints the package.json file content')
+  .example(
+    '$0 myjsonfile.json "x => x.myKey"',
+    'prints `myKey` from the JSON file',
+  )
+  .example('$0 myjsonfile.json -s 2', 'prints with 2 spaces')
+  .version()
+  .parse()
