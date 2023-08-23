@@ -46,7 +46,7 @@ yargs(hideBin(process.argv))
         }
         const output = JSON.stringify(
           data,
-          parser ? (key, value) => parser(value) : null,
+          parser ? (key, value) => (key ? value : parser(value)) : null,
           spaces,
         )
         if (copy) {
