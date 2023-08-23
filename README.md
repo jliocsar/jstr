@@ -1,10 +1,8 @@
 <div align="center">
 
-<span style="font-size:6rem;">🪴</span>
+# jstr 🪴
 
-<h1 style="font-size:2.5rem;">jstr</h1>
-
-<i style="font-size:1.2rem;">Simple JavaScript CLI tool to read and parse JSON files.</i>
+_Simple JavaScript CLI tool to read and parse JSON files._
 
 </div>
 
