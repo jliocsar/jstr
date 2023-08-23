@@ -19,7 +19,8 @@
   },
   "scripts": {
     "build": "pkg --compress GZip -o dist/jstr --options max-heap-size=34 .",
-    "postbuild": "sudo cp dist/jstr /usr/local/bin/jstr && sudo chmod +x /usr/local/bin/jstr"
+    "postbuild": "sudo cp dist/jstr /usr/local/bin/jstr && sudo chmod +x /usr/local/bin/jstr",
+    "postinstall": "npm run build"
   },
   "keywords": [],
   "author": "",
