@@ -1,7 +1,14 @@
-# jstr 🪴
+<div align="center">
 
-Simple JavaScript CLI tool to read and parse JSON files.
-It also allows you to manipulate the output itself by using JS syntax.
+<span style="font-size:6rem;">🪴</span>
+
+<h1 style="font-size:2.5rem;">jstr</h1>
+
+<i style="font-size:1.2rem;">Simple JavaScript CLI tool to read and parse JSON files.</i>
+
+</div>
+
+Description says it all. This tool also allows you to manipulate the output itself by using JS syntax.
 
 The CLI script itself has ~1.5Kb of file size, so it's quite lightweight -- and pretty fast too, since it's just using native JS functions.
 
