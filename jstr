@@ -26,16 +26,19 @@ yargs(hideBin(process.argv))
           default: null,
         }),
     ({ file, parser: parserstr, spaces, verbose, copy }) => {
+      const verboseLogger = (...args) => {
+        if (verbose) console.info(...args)
+      }
       const filePath = path.resolve(directory, file)
-      if (verbose) console.info('reading file', file)
-      if (verbose) console.info('full path:', filePath)
+      verboseLogger('reading file', file)
+      verboseLogger('full path:', filePath)
       fs.readFile(path.resolve(directory, file), (error, buffer) => {
         if (error) {
           console.error(error.message)
           exit(1)
         }
         const data = JSON.parse(buffer.toString())
-        if (verbose) console.info(`using ${spaces} spaces to stringify`)
+        verboseLogger(`using ${spaces} spaces to stringify`)
         const parser = parserstr ? safeEval(parserstr) : null
         if (parser && typeof parser !== 'function') {
           console.error('Parser must be of type function')
@@ -47,7 +50,7 @@ yargs(hideBin(process.argv))
           spaces,
         )
         if (copy) {
-          if (verbose) console.info('copying to clipboard')
+          verboseLogger('copying to clipboard')
           ncp.copy(output)
         } else {
           console.log(output)
