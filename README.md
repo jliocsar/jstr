@@ -31,16 +31,15 @@ jstr package.json "x => x.name"
 
 # In case you need to use more lines for the snippet
 jstr package.json \
-'({ name }) => {
+"({ name }) => {
   const capitalized = name[0].toUpperCase() + name.slice(1)
   return capitalized
-}'
+}"
 
 # Using Ramda to manipulate the output
 jstr package.json \
-"x => R.replace(
-  '{packageName}',
-  R.__,
-  'new-{packageName}'
-)(x.name)"
+"x => {
+  const withNew = R.replace('{name}', R.__, 'new-{name}')
+  return withNew(x.name)
+}"
 ```
