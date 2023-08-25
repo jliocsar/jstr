@@ -1,6 +1,6 @@
 <div align="center">
 
-# jstr 🧵
+# jstr 🕷️
 
 _Simple JavaScript CLI tool to read and parse JSON files_
 
@@ -9,6 +9,7 @@ _Simple JavaScript CLI tool to read and parse JSON files_
 Description says it all.
 
 The CLI script file has ~2Kb when minified, so it's quite lightweight. It tries to use the least amount of dependencies possible to keep it as fast as possible too.
+
 The JSON output can be manipulated using pure JS syntax. The parser handler also exposes [Ramda](https://ramdajs.com/) to easily parse strings/arrays if necessary (just use `R`).
 
 TL;DR This is a `JSON.parse`/`stringify` wrapper focused in files rather than pure strings.
