@@ -1,14 +1,87 @@
 #!/usr/bin/env node
-const fs = require('fs')
 const path = require('path')
-const { exit, cwd } = require('process')
+const { stdout, stderr, exit, cwd } = require('process')
+
+const fs = require('graceful-fs')
 const ncp = require('copy-paste')
 const safeEval = require('safe-eval')
-
 const yargs = require('yargs/yargs')
 const { hideBin } = require('yargs/helpers')
+const R = require('ramda')
 
 const directory = cwd()
+const context = { R }
+
+const handler = ({
+  file,
+  parser: parserstr,
+  spaces,
+  verbose,
+  copy,
+  suffix,
+  prefix,
+}) => {
+  const verboseLogger = (...args) => {
+    if (verbose) stdout.write(args.join(' ') + '\n')
+  }
+  const filePath = path.resolve(directory, file)
+  verboseLogger('reading file', file)
+  verboseLogger('full path:', filePath)
+  fs.readFile(path.resolve(directory, file), (error, buffer) => {
+    if (error) {
+      stderr.write(error.message)
+      exit(1)
+    }
+    const manuallyRevive = suffix || prefix
+    const data = JSON.parse(
+      buffer.toString(),
+      manuallyRevive
+        ? (key, value) => {
+            if (key) return value
+            verboseLogger('reviving keys')
+            const keys = Object.keys(value)
+            const keysLength = keys.length
+            const revived = {}
+            let index = 0
+            while (index < keysLength) {
+              const key = keys[index]
+              verboseLogger('reviving key', key)
+              let formattedKey = key
+              if (suffix) formattedKey = formattedKey + suffix
+              if (prefix) formattedKey = prefix + formattedKey
+              revived[formattedKey] = value[keys[index]]
+              ++index
+            }
+            return revived
+          }
+        : null,
+    )
+    verboseLogger(`using ${spaces} spaces to stringify`)
+    const parser = parserstr ? safeEval(parserstr, context) : null
+    if (parser && typeof parser !== 'function') {
+      stderr.write('Parser must be of type function')
+      exit(1)
+    }
+    const output = JSON.stringify(
+      data,
+      parser ? (key, value) => (key ? value : parser(value)) : null,
+      spaces,
+    )
+    if (output === null || output === undefined) {
+      stderr.write(
+        'Parser must return a value different to `null` and `undefined`',
+      )
+      exit(1)
+    }
+    if (copy) {
+      verboseLogger('copying to clipboard')
+      ncp.copy(output)
+    } else {
+      stdout.write(output)
+    }
+    exit()
+  })
+}
 
 yargs(hideBin(process.argv))
   .command(
@@ -25,39 +98,7 @@ yargs(hideBin(process.argv))
           describe: 'parser function to use',
           default: null,
         }),
-    ({ file, parser: parserstr, spaces, verbose, copy }) => {
-      const verboseLogger = (...args) => {
-        if (verbose) console.info(...args)
-      }
-      const filePath = path.resolve(directory, file)
-      verboseLogger('reading file', file)
-      verboseLogger('full path:', filePath)
-      fs.readFile(path.resolve(directory, file), (error, buffer) => {
-        if (error) {
-          console.error(error.message)
-          exit(1)
-        }
-        const data = JSON.parse(buffer.toString())
-        verboseLogger(`using ${spaces} spaces to stringify`)
-        const parser = parserstr ? safeEval(parserstr) : null
-        if (parser && typeof parser !== 'function') {
-          console.error('Parser must be of type function')
-          exit(1)
-        }
-        const output = JSON.stringify(
-          data,
-          parser ? (key, value) => (key ? value : parser(value)) : null,
-          spaces,
-        )
-        if (copy) {
-          verboseLogger('copying to clipboard')
-          ncp.copy(output)
-        } else {
-          console.log(output)
-        }
-        exit()
-      })
-    },
+    handler,
   )
   .strictCommands()
   .demandCommand(1)
@@ -77,11 +118,23 @@ yargs(hideBin(process.argv))
     type: 'boolean',
     description: 'Copy the output to the clipboard',
   })
+  .option('suffix', {
+    type: 'string',
+    description: 'Adds a suffix to every key of the JSON file (first level)',
+  })
+  .option('prefix', {
+    type: 'string',
+    description: 'Adds a prefix to every key of the JSON file (first level)',
+  })
   .example('$0 package.json', 'prints the package.json file content')
   .example(
     '$0 myjsonfile.json "x => x.myKey"',
     'prints `myKey` from the JSON file',
   )
-  .example('$0 myjsonfile.json -s 2', 'prints with 2 spaces')
+  .example('$0 -s=2 myjsonfile.json', 'prints with 2 spaces')
+  .example(
+    '$0 --prefix=foo --suffix=bar file.json',
+    'adds a prefix and suffix to every key on the 1st level',
+  )
   .version()
   .parse()

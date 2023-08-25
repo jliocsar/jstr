@@ -10,6 +10,8 @@
   "main": "index.js",
   "dependencies": {
     "copy-paste": "latest",
+    "graceful-fs": "latest",
+    "ramda": "latest",
     "safe-eval": "latest",
     "yargs": "latest"
   },
@@ -18,8 +20,7 @@
     "pkg": "^5.8.1"
   },
   "scripts": {
-    "build": "pkg --compress GZip -o dist/jstr --options max-heap-size=34 .",
-    "postbuild": "sudo cp dist/jstr /usr/local/bin/jstr && sudo chmod +x /usr/local/bin/jstr",
+    "build": "node build.js",
     "postinstall": "npm run build"
   },
   "keywords": [],

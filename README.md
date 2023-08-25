@@ -1,16 +1,17 @@
 <div align="center">
 
-# jstr 🪴
+# jstr 🧵
 
-_Simple JavaScript CLI tool to read and parse JSON files._
+_Simple JavaScript CLI tool to read and parse JSON files_
 
 </div>
 
-Description says it all. This tool also allows you to manipulate the output itself by using JS syntax.
+Description says it all.
 
-The CLI script itself has ~1.5Kb of file size, so it's quite lightweight -- and pretty fast too, since it's just using native JS functions.
+The CLI script file has ~2Kb when minified, so it's quite lightweight. It tries to use the least amount of dependencies possible to keep it as fast as possible too.
+The JSON output can be manipulated using pure JS syntax. The parser handler also exposes [Ramda](https://ramdajs.com/) to easily parse strings/arrays if necessary (just use `R`).
 
-TL;DR This is a `JSON.parse`/`JSON.stringify` wrapper, used to facilitate interactions with JSON files.
+TL;DR This is a `JSON.parse`/`stringify` wrapper focused in files rather than pure strings.
 
 ## Usage
 
@@ -33,4 +34,12 @@ jstr package.json \
   const capitalized = name[0].toUpperCase() + name.slice(1)
   return capitalized
 }'
+
+# Using Ramda to manipulate the output
+jstr package.json \
+"x => R.replace(
+  '{packageName}',
+  R.__,
+  'new-{packageName}'
+)(x.name)"
 ```
