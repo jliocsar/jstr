@@ -7,7 +7,7 @@
     "npm": ">=6.0.0",
     "yarn": "please use npm"
   },
-  "main": "index.js",
+  "main": "jstr.js",
   "dependencies": {
     "copy-paste": "latest",
     "graceful-fs": "latest",
@@ -15,7 +15,7 @@
     "safe-eval": "latest",
     "yargs": "latest"
   },
-  "bin": "jstr",
+  "bin": "jstr.js",
   "devDependencies": {
     "pkg": "^5.8.1"
   },

@@ -7,6 +7,7 @@ const yargs = require('yargs/yargs')
 const { hideBin } = require('yargs/helpers')
 
 const copyUnixBinary = () => {
+  stdout.write('Copying binary, requesting sudo access...\n')
   exec('sudo cp dist/jstr /usr/local/bin/jstr', error => {
     if (error) {
       stderr.write(error.message)
@@ -30,8 +31,9 @@ const map = {
   darwin: copyUnixBinary,
   win32: copyWindowsBinary,
 }
-const handler = () => {
-  pkg.exec(['--compress GZip', '-o', 'dist/jstr', '.'])
+const handler = async () => {
+  stdout.write('Building binary...\n')
+  await pkg.exec(['--compress GZip', '-o', 'dist/jstr', '.'])
   const copyFile = map[platform()]
   if (!copyFile) {
     stderr.write('Unsupported platform type')
