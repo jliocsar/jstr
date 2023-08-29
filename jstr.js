@@ -8,6 +8,7 @@ const ncp = require('copy-paste')
 const safeEval = require('safe-eval')
 const yargs = require('yargs/yargs')
 const { hideBin } = require('yargs/helpers')
+const { Notation } = require('notation')
 const R = require('ramda')
 
 const directory = cwd()
@@ -17,7 +18,7 @@ const parseJSON = (value, reviver) => {
   try {
     return JSON.parse(value, reviver)
   } catch (error) {
-    stderr.write(`Invalid JSON: '${value}'`)
+    stderr.write(`Invalid JSON: '${error.message}'`)
     exit(1)
   }
 }
@@ -62,25 +63,30 @@ const handler = async ({
           if (key) return value
           // map can be a simple JSON or something like
           // { "name.otherThing": 'otherThingy } => { "name": { "otherThingy": "" } }
+          let parsedValue = value
           const parsedMap = map ? parseJSON(map) : null
           if (parsedMap) {
-            const parsedMapKeys = Object.keys(parsedMap)
+            const notated = Notation.create(parsedValue)
+            const parsedMapKeys = Object.entries(parsedMap)
             const parsedMapKeysLength = parsedMapKeys.length
             let mapKeyIndex = 0
             while (mapKeyIndex < parsedMapKeysLength) {
-              // TODO: Rename the keys using map
+              const [accessKey, replacement] = parsedMapKeys[mapKeyIndex]
+              notated.rename(accessKey, replacement)
+              ++mapKeyIndex
             }
+            parsedValue = notated.value
           }
-          let parsedValue = value
           const keys = Object.keys(parsedValue)
           const keysLength = keys.length
           const revived = {}
           let index = 0
           while (index < keysLength) {
             const key = keys[index]
-            if (suffix) key = key + suffix
-            if (prefix) key = prefix + key
-            revived[key] = parsedValue[key]
+            let revivedKey = key
+            if (suffix) revivedKey = revivedKey + suffix
+            if (prefix) revivedKey = prefix + revivedKey
+            revived[revivedKey] = parsedValue[key]
             ++index
           }
           return revived
