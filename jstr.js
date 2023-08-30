@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-const start = performance.now()
-console.log(start)
 const path = require('path')
 const { stdin, stdout, stderr, exit, cwd } = require('process')
 const readline = require('readline')
@@ -129,7 +127,6 @@ const handler = async handlerArgs => {
     }
     stdout.write(nullablesMap[output] ?? output.toString())
   }
-  console.log(performance.now() - start)
   exit()
 }
 
