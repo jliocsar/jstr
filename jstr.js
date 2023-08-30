@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+const start = performance.now()
+console.log(start)
 const path = require('path')
 const { stdin, stdout, stderr, exit, cwd } = require('process')
 const readline = require('readline')
@@ -14,14 +16,17 @@ const R = require('ramda')
 const directory = cwd()
 const context = { R }
 
-const parseJSON = (value, reviver) => {
-  try {
-    return JSON.parse(value, reviver)
-  } catch (error) {
-    stderr.write(`Invalid JSON: '${error.message}'`)
-    exit(1)
-  }
-}
+const parseJSON = R.binary(
+  R.ifElse(
+    R.isNotNil,
+    R.tryCatch(JSON.parse, error => {
+      stderr.write(`Invalid JSON: '${error.message}'`)
+      exit(1)
+    }),
+    R.always(null),
+  ),
+)
+
 const readFile = filePath =>
   new Promise((resolve, reject) => {
     fs.readFile(filePath, (error, buffer) => {
@@ -29,74 +34,79 @@ const readFile = filePath =>
       return resolve(buffer)
     })
   })
-const readPipedValue = () => {
-  const rl = readline.createInterface({
-    input: stdin,
-    output: stdout,
-    terminal: false,
-  })
-  return new Promise(resolve => rl.on('line', resolve))
-}
 
-const handler = async ({
-  file: fileOrParser,
-  parser: parserstr,
-  spaces,
-  verbose,
-  copy,
-  suffix,
-  prefix,
-  input,
-  map,
-}) => {
-  const logv = verbose ? stdout.write.bind(stdout) : () => void 0
+const readPipedValue = () =>
+  new Promise(resolve =>
+    readline
+      .createInterface({
+        input: stdin,
+        output: stdout,
+        terminal: false,
+      })
+      .on('line', resolve),
+  )
+
+const renameFromMapNotation = notated => (replacement, accessKey) =>
+  notated.rename(accessKey, replacement)
+
+const hasToManuallyRevive = R.anyPass([
+  R.has('prefix'),
+  R.has('suffix'),
+  R.has('map'),
+])
+
+const parseMap = R.unless(R.isNil, parseJSON)
+
+const buildJSONReviver =
+  (logv, { suffix, prefix, map }) =>
+  (key, value) => {
+    if (key) return value
+    logv('manually reviving...')
+    // map can be a simple JSON or something like
+    // { "name.otherThing": 'otherThingy } => { "name": { "otherThingy": "" } }
+    let parsedValue = value
+    const parsedMap = parseMap(map)
+    if (parsedMap) {
+      const notated = Notation.create(parsedValue)
+      R.forEachObjIndexed(renameFromMapNotation(notated))(parsedMap)
+      parsedValue = notated.value
+    }
+    return R.reduce(
+      (revived, key) => {
+        let revivedKey = key
+        if (suffix) revivedKey = revivedKey + suffix
+        if (prefix) revivedKey = prefix + revivedKey
+        revived[revivedKey] = parsedValue[key]
+        return revived
+      },
+      {},
+      R.keys(parsedValue),
+    )
+  }
+
+const handler = async handlerArgs => {
+  const {
+    file: fileOrParser,
+    parser: parserstr,
+    spaces,
+    verbose,
+    copy,
+    input,
+  } = handlerArgs
+  const logv = verbose ? message => stdout.write(message + '\n') : () => void 0
+  logv(`reading from ${input ? 'pipe' : 'file'}...`)
   const buffer = input
-    ? logv('reading from pipe...') || (await readPipedValue())
-    : logv('reading from file...') ||
-      (await readFile(path.resolve(directory, fileOrParser)))
-  const manuallyRevive = Boolean(suffix || prefix || map)
+    ? await readPipedValue()
+    : await readFile(path.resolve(directory, fileOrParser))
   const data = parseJSON(
     buffer.toString(),
-    manuallyRevive
-      ? (key, value) => {
-          logv('manually reviving...')
-          if (key) return value
-          // map can be a simple JSON or something like
-          // { "name.otherThing": 'otherThingy } => { "name": { "otherThingy": "" } }
-          let parsedValue = value
-          const parsedMap = map ? parseJSON(map) : null
-          if (parsedMap) {
-            const notated = Notation.create(parsedValue)
-            const parsedMapKeys = Object.entries(parsedMap)
-            const parsedMapKeysLength = parsedMapKeys.length
-            let mapKeyIndex = 0
-            while (mapKeyIndex < parsedMapKeysLength) {
-              const [accessKey, replacement] = parsedMapKeys[mapKeyIndex]
-              notated.rename(accessKey, replacement)
-              ++mapKeyIndex
-            }
-            parsedValue = notated.value
-          }
-          const keys = Object.keys(parsedValue)
-          const keysLength = keys.length
-          const revived = {}
-          let index = 0
-          while (index < keysLength) {
-            const key = keys[index]
-            let revivedKey = key
-            if (suffix) revivedKey = revivedKey + suffix
-            if (prefix) revivedKey = prefix + revivedKey
-            revived[revivedKey] = parsedValue[key]
-            ++index
-          }
-          return revived
-        }
-      : null,
+    hasToManuallyRevive(handlerArgs)
+      ? buildJSONReviver(logv, handlerArgs)
+      : R.always(null),
   )
-  const parser = (input ? fileOrParser : parserstr)
-    ? safeEval(parserstr, context)
-    : null
-  if (parser && typeof parser !== 'function') {
+  const parserToEval = R.isNil(input) ? parserstr : fileOrParser
+  const parser = parserToEval ? safeEval(parserToEval, context) : null
+  if (R.and(parser, R.not(R.type(parser) === 'Function'))) {
     stderr.write('Parser must be of type function')
     exit(1)
   }
@@ -105,18 +115,21 @@ const handler = async ({
     parser ? (key, value) => (key ? value : parser(value)) : null,
     spaces,
   )
-  if (output === null || output === undefined) {
-    stderr.write(
-      'Parser must return a value different to `null` and `undefined`',
-    )
-    exit(1)
-  }
-  if (copy) {
+  if (R.isNotNil(copy)) {
+    if (R.isNil(output)) {
+      stderr.write("Can't copy `null` or `undefined` to clipboard")
+      exit(1)
+    }
     logv('copying to clipboard')
     ncp.copy(output)
   } else {
-    stdout.write(output)
+    const nullablesMap = {
+      [null]: 'null',
+      [undefined]: 'undefined',
+    }
+    stdout.write(nullablesMap[output] ?? output.toString())
   }
+  console.log(performance.now() - start)
   exit()
 }
 
