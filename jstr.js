@@ -42,7 +42,7 @@ const readPipedValue = () => {
         terminal: false,
       })
       .on('line', line => (lines += line + '\n'))
-    setTimeout(() => resolve(lines), 100)
+      .on('close', () => resolve(lines))
   })
 }
 
@@ -57,7 +57,7 @@ const hasToManuallyRevive = R.anyPass([
 
 const parseMap = R.unless(R.isNil, parseJSON)
 
-const buildJSONReviver =
+const buildJstrReviver =
   (logv, { suffix, prefix, map }) =>
   (key, value) => {
     if (key) return value
@@ -104,6 +104,21 @@ const logOutput = output => () => {
   )
 }
 
+const isInvalidParserType = parser =>
+  R.and(parser, R.not(R.equals(R.type(parser), 'Function')))
+
+const revive = (logv, handlerArgs) => {
+  const safeRevive = R.cond([
+    [hasToManuallyRevive, R.curry(buildJstrReviver)(logv)],
+    [R.T, R.always(null)],
+  ])
+  return safeRevive(handlerArgs)
+}
+const replace = R.cond([
+  [R.isNotNil, reviveFromParser],
+  [R.T, R.always(null)],
+])
+
 const handler = async handlerArgs => {
   const {
     file: fileOrParser,
@@ -118,27 +133,16 @@ const handler = async handlerArgs => {
   const buffer = input
     ? await readPipedValue()
     : await readFile(path.resolve(directory, fileOrParser))
-  const data = parseJSON(
-    buffer.toString(),
-    R.cond([
-      [hasToManuallyRevive, R.curry(buildJSONReviver)(logv)],
-      [R.T, R.always(null)],
-    ])(handlerArgs),
-  )
+  const data = parseJSON(buffer.toString(), revive(logv, handlerArgs))
   const parserToEval = R.isNil(input) ? parserstr : fileOrParser
-  const parser = parserToEval ? safeEval(parserToEval, context) : null
-  if (R.and(parser, R.not(R.type(parser) === 'Function'))) {
+  const parser = R.isNotNil(parserToEval)
+    ? safeEval(parserToEval, context)
+    : null
+  if (isInvalidParserType(parser)) {
     stderr.write('Parser must be of type function')
     exit(1)
   }
-  const output = JSON.stringify(
-    data,
-    R.cond([
-      [R.isNotNil, reviveFromParser],
-      [R.T, R.always(null)],
-    ])(parser),
-    spaces,
-  )
+  const output = JSON.stringify(data, replace(parser), spaces)
   R.ifElse(R.isNotNil, copyToClipboard(logv, output), logOutput(output))(copy)
   exit()
 }
