@@ -32,17 +32,19 @@ const readFile = filePath =>
       return resolve(buffer)
     })
   })
-
-const readPipedValue = () =>
-  new Promise(resolve =>
+const readPipedValue = () => {
+  let lines = ''
+  return new Promise(resolve => {
     readline
       .createInterface({
         input: stdin,
         output: stdout,
         terminal: false,
       })
-      .on('line', resolve),
-  )
+      .on('line', line => (lines += line + '\n'))
+    setTimeout(() => resolve(lines), 100)
+  })
+}
 
 const renameFromMapNotation = notated => (replacement, accessKey) =>
   notated.rename(accessKey, replacement)
@@ -66,7 +68,7 @@ const buildJSONReviver =
     const parsedMap = parseMap(map)
     if (parsedMap) {
       const notated = Notation.create(parsedValue)
-      R.forEachObjIndexed(renameFromMapNotation(notated))(parsedMap)
+      R.forEachObjIndexed(renameFromMapNotation(notated), parsedMap)
       parsedValue = notated.value
     }
     return R.reduce(
@@ -81,6 +83,26 @@ const buildJSONReviver =
       R.keys(parsedValue),
     )
   }
+
+const reviveFromParser = parser => (key, value) => key ? value : parser(value)
+
+const copyToClipboard = (logv, output) => () => {
+  if (R.isNil(output)) {
+    stderr.write("Can't copy `null` or `undefined` to clipboard")
+    exit(1)
+  }
+  logv('copying to clipboard')
+  ncp.copy(output)
+}
+
+const logOutput = output => () => {
+  stdout.write(
+    {
+      [null]: 'null',
+      [undefined]: 'undefined',
+    }[output] ?? output.toString(),
+  )
+}
 
 const handler = async handlerArgs => {
   const {
@@ -98,9 +120,10 @@ const handler = async handlerArgs => {
     : await readFile(path.resolve(directory, fileOrParser))
   const data = parseJSON(
     buffer.toString(),
-    hasToManuallyRevive(handlerArgs)
-      ? buildJSONReviver(logv, handlerArgs)
-      : R.always(null),
+    R.cond([
+      [hasToManuallyRevive, R.curry(buildJSONReviver)(logv)],
+      [R.T, R.always(null)],
+    ])(handlerArgs),
   )
   const parserToEval = R.isNil(input) ? parserstr : fileOrParser
   const parser = parserToEval ? safeEval(parserToEval, context) : null
@@ -110,29 +133,19 @@ const handler = async handlerArgs => {
   }
   const output = JSON.stringify(
     data,
-    parser ? (key, value) => (key ? value : parser(value)) : null,
+    R.cond([
+      [R.isNotNil, reviveFromParser],
+      [R.T, R.always(null)],
+    ])(parser),
     spaces,
   )
-  if (R.isNotNil(copy)) {
-    if (R.isNil(output)) {
-      stderr.write("Can't copy `null` or `undefined` to clipboard")
-      exit(1)
-    }
-    logv('copying to clipboard')
-    ncp.copy(output)
-  } else {
-    const nullablesMap = {
-      [null]: 'null',
-      [undefined]: 'undefined',
-    }
-    stdout.write(nullablesMap[output] ?? output.toString())
-  }
+  R.ifElse(R.isNotNil, copyToClipboard(logv, output), logOutput(output))(copy)
   exit()
 }
 
 yargs(hideBin(process.argv))
   .command(
-    '$0 <file> [parser]',
+    '$0 [file] [parser]',
     'parses and prints a JSON file in string version',
     yargs =>
       yargs
