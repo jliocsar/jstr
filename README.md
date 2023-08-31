@@ -106,3 +106,30 @@ node my-fetch-script.js | jstr -i \
 ```json
 [20, 20]
 ```
+
+You can also use `jstr` to remake JSON files:
+
+**Example:**
+
+Input (`./package.json` file):
+
+```json
+{ "name": "Test", "devDependencies": { "pkg": "1.0.0" } }
+```
+
+```sh
+jstr -s=2 -m='{"devDependencies.pkg":"bar"}' --prefix="foo:" package.json \
+  "x => {
+    x['foo:name'] = x['foo:name'].toUpperCase()
+    return x
+  }" > my-new-file.json
+```
+
+Output (`./my-new-file.json` file):
+
+```json
+{
+  "foo:name": "TEST",
+  "foo:bar": "1.0.0"
+}
+```
