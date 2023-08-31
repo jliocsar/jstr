@@ -139,3 +139,9 @@ Output (`./my-new-file.json` file):
   "foo:bar": "1.0.0"
 }
 ```
+
+## Benchmarks
+
+Currently `jstr` runs about 2.5x faster than `jq.node` (another famous CLI tool for JSON manipulation) in simple operations.
+
+![Benchmark](/.github/static/benchmark.png)
