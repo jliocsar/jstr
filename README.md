@@ -53,6 +53,8 @@ echo '{"name":"foo"}' | jstr -i 'x => x.name'
 
 ## Advanced Usage
 
+### Map field names
+
 The `-m`/`--map` option will rename fields using dot notation (see [Notation.js](https://www.npmjs.com/package/notation))
 
 **Example:**
@@ -75,6 +77,8 @@ Output:
   "abc:devDependencies": { "foo": "1.0.0" }
 }
 ```
+
+### Read from `stdin` (pipe commands)
 
 The `-i`/`--input` option will read the JSON data from `stdin` rather than the file provided:
 
@@ -106,6 +110,8 @@ node my-fetch-script.js | jstr -i \
 ```json
 [20, 20]
 ```
+
+### Evolve JSON files
 
 You can also use `jstr` to remake JSON files:
 
