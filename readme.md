@@ -1,22 +1,32 @@
 <div align="center">
 
-# jstr 🍂
+<img src=".github/static/jester.png" width=120 />
+
+# jstr
 
 _Simple JavaScript CLI tool to read and parse JSON files_
 
 </div>
 
-Description says it all.
+- 🪶 **Lightweight**: ~2kb when minified, keeping it simple & straightforward;
+- ⚡ **Fast**: Get parsed results or new JSON files in milliseconds;
+- 🦣 **Functional**: Have the benefits of functional programming inside your JSON parsing tool (see [Ramda](https://ramdajs.com/));
+- 🙅 **No BS**: Manipulate results with good ole' JavaScript, no new cryptic languages to learn;
 
-The CLI script file has ~2Kb when minified, so it's quite lightweight. It tries to use the least amount of dependencies possible to keep it as fast as possible too.
+## Description
 
-The JSON output can be manipulated using pure JS syntax by providing a parser handler in the format of a stringified JS function.
+`jstr` (**JS**ON S**tr**ingifier -- pronounced as _jester_) is a CLI tool built with JavaScript + [Ramda](https://github.com/ramda/ramda) to achieve an easy & fast way to parse and manipulate JSON strings or files.
 
-The parser handler also exposes [Ramda](https://ramdajs.com/) to easily parse strings/arrays if necessary (just use `R`).
+It came out of the necessity to have something fast (and easy to learn) to copy & paste big JSON files.
+
+The command accepts a JavaScript callback function to easily parse/select/modify data structures within your JSON if necessary: Follow the examples below, write pure JS and have fun!
 
 TL;DR This is a `JSON.parse`/`stringify` wrapper focused in files rather than pure strings.
 
 ## Usage
+
+> **Note**
+> Ramda is exposed as `R` inside your parser function, you can use it to manipulate your JSON output.
 
 ```sh
 # Copies the content in `package.json` to the clipboard
