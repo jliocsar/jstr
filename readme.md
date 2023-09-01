@@ -10,18 +10,18 @@ _Simple JavaScript CLI tool to read and parse JSON files_
 
 - 🪶 **Lightweight**: ~2kb when minified, keeping it simple & straightforward;
 - ⚡ **Fast**: Get parsed results or new JSON files in milliseconds;
-- 🦣 **Functional**: Have the benefits of functional programming inside your JSON parsing tool (see [Ramda](https://ramdajs.com/));
-- 🙅 **No BS**: Manipulate results with good ole' JavaScript, no new cryptic languages to learn;
+- 🦣 **Functional**: Have the benefits of functional programming in your JSON parsing tool (see [Ramda](https://ramdajs.com/));
+- 🙅 **No BS**: Manipulate results with good ole' JavaScript, no need to learn cryptic languages.
 
 ## Description
 
-`jstr` (**JS**ON S**tr**ingifier -- pronounced as _jester_) is a CLI tool built with JavaScript + [Ramda](https://github.com/ramda/ramda) to achieve an easy & fast way to parse and manipulate JSON strings or files.
+`jstr` (**JS**ON S**tr**ingifier -- pronounced as _jester_) is a CLI tool built with JavaScript & [Ramda](https://github.com/ramda/ramda) to easily parse and manipulate JSON strings or files.
 
-It came out of the necessity to have something fast (and easy to learn) to copy & paste big JSON files.
+It came out of the necessity to have something fast (and easy to use/learn) to copy & paste big JSON files.
 
-The command accepts a JavaScript callback function to easily parse/select/modify data structures within your JSON if necessary: Follow the examples below, write pure JS and have fun!
+The command accepts a JavaScript callback function to parse/select/modify data structures within your JSON if necessary: Follow the examples below, write pure JS and have fun!
 
-TL;DR This is a `JSON.parse`/`stringify` wrapper focused in files rather than pure strings.
+_TL;DR This is a `JSON.parse`/`stringify` wrapper focused in files rather than pure strings._
 
 ## Usage
 
