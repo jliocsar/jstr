@@ -1,8 +1,14 @@
+<style>
+  h1 {
+    margin-top: 0.2em !important;
+  }
+</style>
+
 <div align="center">
 
-<img src=".github/static/jester.png" width=120 height />
+<img src=".github/static/jester.png" width=148 height=148 />
 
-<h1 style="margin-top: 0.2em;" >jstr</h1>
+<h1>jstr</h1>
 
 _Simple JavaScript CLI tool to read and parse JSON files_
 
