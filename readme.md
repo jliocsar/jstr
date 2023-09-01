@@ -17,7 +17,7 @@ _Simple JavaScript CLI tool to read and parse JSON files_
 
 `jstr` (**JS**ON S**tr**ingifier -- pronounced as _jester_) is a CLI tool built with JavaScript & [Ramda](https://github.com/ramda/ramda) to easily parse and manipulate JSON strings or files.
 
-It came out of the necessity to have something fast (and easy to use/learn) to copy & paste big JSON files.
+It was built when I first had the need to use the `JSON` methods from JS without the hassle of actually creating a script file, so I could copy & paste those values one file to another.
 
 The command accepts a JavaScript callback function to parse/select/modify data structures within your JSON if necessary: Follow the examples below, write pure JS and have fun!
 
