@@ -1,27 +1,25 @@
-<div align="center">
+<div align=center>
 
-<img src=".github/static/jester.png" width=148 height=148 />
-
-# jstr
+<img src=.github/static/jester.png width=30% />
 
 _Simple JavaScript CLI tool to read and parse JSON files_
 
 </div>
 
-- 🪶 **Lightweight**: ~2kb when minified, keeping it simple & straightforward;
+- 🪶 **Lightweight**: ~3.5kb when minified, keeping it simple & straightforward;
 - ⚡ **Fast**: Get parsed results or new JSON files in milliseconds;
 - 🦣 **Functional**: Have the benefits of functional programming in your JSON parsing tool (see [Ramda](https://ramdajs.com/));
-- 🙅 **No BS**: Manipulate results with good ole' JavaScript, no need to learn cryptic languages.
+- 🙅 **No BS**: Manipulate results with good ole' JavaScript, no need to learn cryptic languages/libraries -- use what fits you.
 
 ## Description
 
 `jstr` (**JS**ON S**tr**ingifier -- pronounced as _jester_) is a CLI tool built with JavaScript & [Ramda](https://github.com/ramda/ramda) to easily parse and manipulate JSON strings or files.
 
-It was built when I first had the need to use the `JSON` methods from JS without the hassle of actually creating a script file, so I could copy & paste those values one file to another.
+It was built when I first had the necessity of `JSON` methods from JavaScript without creating a script file, so I could copy & paste those JSON values one file to another. I coded the first POC in ~1 hour and it already had its main premise: using pure JS to interact with JSON files, rather than having to learn new languages or library-specific BS to use such a simple concept.
 
-The command accepts a JavaScript callback function to parse/select/modify data structures within your JSON if necessary: Follow the examples below, write pure JS and have fun!
+This means that the command accepts a JavaScript callback function to parse/select/modify data structures within your JSON if necessary: follow the examples below, write JS and have fun!
 
-_TL;DR This is a `JSON.parse`/`stringify` wrapper focused in files rather than pure strings._
+_TL;DR This is a `JSON.parse`/`stringify` wrapper focused in CLI commands rather than JS scripts._
 
 ## Usage
 
@@ -152,9 +150,20 @@ Output (`./my-new-file.json` file):
 
 ## Benchmarks
 
-Currently `jstr` runs about 2.5x faster than `jq.node` (another famous CLI tool for JSON manipulation) in simple operations.
+Currently basic operations are ~2.5x faster in `jstr` vs [`jq.node`](https://github.com/FGRibreau/jq.node).
+
+Keep in mind `jstr` is still a relatively simpler tool, so this benchmark might change in the future.
 
 ![Benchmark](/.github/static/benchmark.png)
+
+## To do
+
+- [ ] Release as a binary on `npm`
+- [ ] Try to make the `bin` smaller in size
+- [ ] Release macOS & Linux builds
+- [ ] Make this thing run faster
+- [ ] Support require of user-defined modules?
+- [ ] Get more coffee
 
 ## Credits
 
