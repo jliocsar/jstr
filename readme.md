@@ -1,6 +1,6 @@
 <div align=center>
 
-<img src=.github/static/jester.png width=30% />
+<img src=.github/static/logo.png width=30% />
 
 _Simple JavaScript CLI tool to read and parse JSON files_
 
@@ -167,4 +167,4 @@ Keep in mind `jstr` is still a relatively simpler tool, so this benchmark might 
 
 ## Credits
 
-[Free icon by Flaticon](https://www.flaticon.com/free-icons/jester)
+[Logo icon by Flaticon](https://www.flaticon.com/free-icons/jester)
