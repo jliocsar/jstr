@@ -155,3 +155,7 @@ Output (`./my-new-file.json` file):
 Currently `jstr` runs about 2.5x faster than `jq.node` (another famous CLI tool for JSON manipulation) in simple operations.
 
 ![Benchmark](/.github/static/benchmark.png)
+
+## Credits
+
+[Free icon by Flaticon](https://www.flaticon.com/free-icons/joker)
