@@ -1,6 +1,8 @@
+# jstr
+
 <div align=center>
 
-<img src=.github/static/logo.png width=30% />
+<img src=.github/static/logo.png width=220 />
 
 _Simple JavaScript CLI tool to read and parse JSON files_
 
