@@ -1,8 +1,8 @@
-# jstr
-
 <div align=center>
 
-<img src=.github/static/logo.png width=220 />
+<img src=.github/static/jester.png width=140 />
+
+# jstr
 
 _Simple JavaScript CLI tool to read and parse JSON files_
 
