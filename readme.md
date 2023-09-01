@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src=".github/static/jester.png" width=120 />
+<img src=".github/static/jester.png" width=120 height />
 
-# jstr
+<h1 style="margin-top: 0.2em;" >jstr</h1>
 
 _Simple JavaScript CLI tool to read and parse JSON files_
 
@@ -158,4 +158,4 @@ Currently `jstr` runs about 2.5x faster than `jq.node` (another famous CLI tool 
 
 ## Credits
 
-[Free icon by Flaticon](https://www.flaticon.com/free-icons/joker)
+[Free icon by Flaticon](https://www.flaticon.com/free-icons/jester)
