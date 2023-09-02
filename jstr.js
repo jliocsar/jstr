@@ -11,6 +11,10 @@ const { hideBin } = require('yargs/helpers')
 const { Notation } = require('notation')
 const R = require('ramda')
 
+const NIL_TO_STRING_MAP = {
+  [null]: 'null',
+  [undefined]: 'undefined',
+}
 const directory = cwd()
 const context = { R }
 
@@ -94,12 +98,7 @@ const copyToClipboard = output => () => {
   ncp.copy(output)
 }
 const logOutput = output => () =>
-  logMessage(
-    {
-      [null]: 'null',
-      [undefined]: 'undefined',
-    }[output] ?? output,
-  )
+  logMessage(NIL_TO_STRING_MAP[output] ?? output)
 
 const hasToManuallyRevive = R.anyPass([
   R.has('prefix'),
