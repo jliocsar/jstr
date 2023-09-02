@@ -14,51 +14,50 @@ const R = require('ramda')
 const directory = cwd()
 const context = { R }
 
+let logv
+const logMessage = message => stdout.write(message + '\n')
+const logErrorMessage = R.curry((message, error) => {
+  stderr.write(error ? `${message}: ${error.message}` : message)
+  exit(1)
+})
+const createLogger = verbose =>
+  (logv = R.ifElse(R.always(verbose), logMessage, R.always(void 0)))
+
 const parseJSON = R.binary(
   R.ifElse(
     R.isNotNil,
-    R.tryCatch(JSON.parse, error => {
-      stderr.write(`Invalid JSON: '${error.message}'`)
-      exit(1)
-    }),
+    R.tryCatch(JSON.parse, logErrorMessage('Invalid JSON')),
     R.always(null),
   ),
 )
 
 const readFile = filePath =>
-  new Promise((resolve, reject) => {
-    fs.readFile(filePath, (error, buffer) => {
-      if (error) return reject(error)
-      return resolve(buffer)
-    })
-  })
+  new Promise((resolve, reject) =>
+    fs.readFile(filePath, (error, buffer) =>
+      error ? reject(error) : resolve(buffer),
+    ),
+  )
 const readPipedValue = () => {
   let lines = ''
-  return new Promise(resolve => {
+  return new Promise(resolve =>
     readline
       .createInterface({
         input: stdin,
         output: stdout,
         terminal: false,
       })
-      .on('line', line => (lines += line + '\n'))
       .on('close', () => resolve(lines))
-  })
+      .on('line', line => (lines += line + '\n')),
+  )
 }
 
 const renameFromMapNotation = notated => (replacement, accessKey) =>
   notated.rename(accessKey, replacement)
 
-const hasToManuallyRevive = R.anyPass([
-  R.has('prefix'),
-  R.has('suffix'),
-  R.has('map'),
-])
-
 const parseMap = R.unless(R.isNil, parseJSON)
 
 const buildJstrReviver =
-  (logv, { suffix, prefix, map }) =>
+  ({ suffix, prefix, map }) =>
   (key, value) => {
     if (key) return value
     logv('manually reviving...')
@@ -86,64 +85,52 @@ const buildJstrReviver =
 
 const reviveFromParser = parser => (key, value) => key ? value : parser(value)
 
-const copyToClipboard = (logv, output) => () => {
+// TODO: Refactor this to use Ramda
+const copyToClipboard = output => () => {
   if (R.isNil(output)) {
-    stderr.write("Can't copy `null` or `undefined` to clipboard")
-    exit(1)
+    logErrorMessage("Can't copy `null` or `undefined` to clipboard")()
   }
   logv('copying to clipboard')
   ncp.copy(output)
 }
-
-const logOutput = output => () => {
-  stdout.write(
+const logOutput = output => () =>
+  logMessage(
     {
       [null]: 'null',
       [undefined]: 'undefined',
-    }[output] ?? output.toString(),
+    }[output] ?? output,
   )
-}
 
-const isInvalidParserType = parser =>
-  R.and(parser, R.not(R.equals(R.type(parser), 'Function')))
-
-const revive = (logv, handlerArgs) => {
-  const safeRevive = R.cond([
-    [hasToManuallyRevive, R.curry(buildJstrReviver)(logv)],
-    [R.T, R.always(null)],
-  ])
-  return safeRevive(handlerArgs)
-}
-const replace = R.cond([
-  [R.isNotNil, reviveFromParser],
-  [R.T, R.always(null)],
+const hasToManuallyRevive = R.anyPass([
+  R.has('prefix'),
+  R.has('suffix'),
+  R.has('map'),
 ])
+const revive = R.ifElse(hasToManuallyRevive, buildJstrReviver, R.always(null))
+const replace = R.ifElse(R.isNotNil, reviveFromParser, R.always(null))
 
 const handler = async handlerArgs => {
   const {
-    file: fileOrParser,
-    parser: parserstr,
     spaces,
     verbose,
     copy,
     input,
+    file: fileOrParser,
+    parser: parserstr,
   } = handlerArgs
-  const logv = verbose ? message => stdout.write(message + '\n') : () => void 0
+  createLogger(verbose)
   logv(`reading from ${input ? 'pipe' : 'file'}...`)
   const buffer = input
     ? await readPipedValue()
     : await readFile(path.resolve(directory, fileOrParser))
-  const data = parseJSON(buffer.toString(), revive(logv, handlerArgs))
+  const data = parseJSON(R.toString(buffer), revive(handlerArgs))
   const parserToEval = R.isNil(input) ? parserstr : fileOrParser
   const parser = R.isNotNil(parserToEval)
     ? safeEval(parserToEval, context)
     : null
-  if (isInvalidParserType(parser)) {
-    stderr.write('Parser must be of type function')
-    exit(1)
-  }
   const output = JSON.stringify(data, replace(parser), spaces)
-  R.ifElse(R.isNotNil, copyToClipboard(logv, output), logOutput(output))(copy)
+  // TODO: Change this when copy and log fns are refactored
+  R.ifElse(R.isNotNil, copyToClipboard(output), logOutput(output))(copy)
   exit()
 }
 

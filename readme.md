@@ -152,7 +152,7 @@ Output (`./my-new-file.json` file):
 
 ## Benchmarks
 
-Currently basic operations are ~2.5x faster in `jstr` vs [`jq.node`](https://github.com/FGRibreau/jq.node).
+Currently basic operations are ~3.4x faster in `jstr` vs [`jq.node`](https://github.com/FGRibreau/jq.node).
 
 Keep in mind `jstr` is still a relatively simpler tool, so this benchmark might change in the future.
 
