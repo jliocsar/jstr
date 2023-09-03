@@ -4,11 +4,15 @@
 
 # jstr
 
+![CLI](https://img.shields.io/badge/cli_tool-111?logo=gnometerminal)
+![JavaScript](https://img.shields.io/badge/javascript-100%25-333?logo=javascript)
+![Repository compressed size](https://img.badgesize.io/jliocsar/jstr/main/jstr.js.svg?compression=gzip)
+
 _Simple JavaScript CLI tool to read and parse JSON files_
 
 </div>
 
-- 🪶 **Lightweight**: ~3.5kb when minified, keeping it simple & straightforward;
+- 🪶 **Lightweight**: ~2kb when compressed, keeping it simple & straightforward;
 - ⚡ **Fast**: Get parsed results or new JSON files in milliseconds;
 - 🦣 **Functional**: Have the benefits of functional programming in your JSON parsing tool (see [Ramda](https://ramdajs.com/));
 - 🙅 **No BS**: Manipulate results with good ole' JavaScript, no need to learn cryptic languages/libraries -- use what fits you.
