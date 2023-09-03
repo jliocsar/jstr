@@ -6,8 +6,8 @@ const readline = require('readline')
 const fs = require('graceful-fs')
 const ncp = require('copy-paste')
 const safeEval = require('safe-eval')
-const yargs = require('yargs/yargs')
 const { hideBin } = require('yargs/helpers')
+const yargs = require('yargs/yargs')(hideBin(process.argv))
 const { Notation } = require('notation')
 const R = require('ramda')
 
@@ -128,6 +128,9 @@ const handler = async handlerArgs => {
     file: fileOrParser,
     parser: parserstr,
   } = handlerArgs
+  if (R.not(R.or(fileOrParser, input))) {
+    logErrorMessage('File or input argument must be provided')()
+  }
   createLogger(verbose)
   logv(`reading from ${input ? 'pipe' : 'file'}...`)
   const buffer = await (input
@@ -143,7 +146,7 @@ const handler = async handlerArgs => {
   exit()
 }
 
-yargs(hideBin(process.argv))
+yargs
   .command(
     '$0 [file] [parser]',
     'parses and prints a JSON file in string version',
@@ -206,5 +209,4 @@ yargs(hideBin(process.argv))
     '$0 --prefix=foo --suffix=bar file.json',
     'adds a prefix and suffix to every key on the 1st level',
   )
-  .version()
-  .parse()
+  .version().argv
