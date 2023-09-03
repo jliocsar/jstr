@@ -27,12 +27,27 @@ This means that the command accepts a JavaScript callback function to parse/sele
 
 _TL;DR This is a `JSON.parse`/`stringify` wrapper focused in CLI commands rather than JS scripts._
 
+## Installation
+
+```sh
+npm i -g @jliocsar/jstr
+```
+
+To make sure it installed successfully:
+
+```sh
+jstr --version
+```
+
 ## Usage
 
 > **Note**
 > Ramda is exposed as `R` inside your parser function, you can use it to manipulate your JSON output.
 
 ```sh
+# Prints the help message w/ all available options
+jstr --help
+
 # Copies the content in `package.json` to the clipboard
 jstr -c package.json
 
