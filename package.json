@@ -1,6 +1,6 @@
 {
   "name": "@jliocsar/jstr",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "engineStrict": true,
   "engines": {
@@ -11,7 +11,7 @@
   "dependencies": {
     "copy-paste": "latest",
     "graceful-fs": "latest",
-    "notation": "^2.0.0",
+    "notation": "latest",
     "ramda": "latest",
     "safe-eval": "latest",
     "yargs": "latest"
@@ -20,7 +20,7 @@
     "jstr": "jstr.js"
   },
   "devDependencies": {
-    "pkg": "^5.8.1"
+    "pkg": "latest"
   },
   "scripts": {
     "build": "node build.js"

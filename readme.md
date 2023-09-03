@@ -4,7 +4,7 @@
 
 # jstr
 
-![CLI](https://img.shields.io/badge/cli_tool-111?logo=gnometerminal)
+![CLI](https://img.shields.io/badge/cli_tool-333?logo=gnubash&logoColor=fff)
 ![JavaScript](https://img.shields.io/badge/javascript-100%25-333?logo=javascript)
 ![Repository compressed size](https://img.badgesize.io/jliocsar/jstr/main/jstr.js.svg?compression=gzip)
 
@@ -15,7 +15,7 @@ _Simple JavaScript CLI tool to read and parse JSON files_
 - 🪶 **Lightweight**: ~2kb when compressed, keeping it simple & straightforward;
 - ⚡ **Fast**: Get parsed results or new JSON files in milliseconds;
 - 🦣 **Functional**: Have the benefits of functional programming in your JSON parsing tool (see [Ramda](https://ramdajs.com/));
-- 🙅 **No BS**: Manipulate results with good ole' JavaScript, no need to learn cryptic languages/libraries -- use what fits you.
+- 🙅 **No BS**: Manipulate results with good ole' JavaScript, no need to learn cryptic languages/libraries -- use what fits you best.
 
 ## Description
 
@@ -154,14 +154,26 @@ Output (`./my-new-file.json` file):
 }
 ```
 
+## Benchmark
+
+When comparing against similar tools such as [`jq.node`](https://github.com/FGRibreau/jq.node), `jstr` is currently around 1.15x slower in simple operations.
+
+![Benchmark results](https://i.imgur.com/zhjG1QQ.png)
+
+Apparently this is because Ramda takes a while to `require`, since the `jstr` handler itself takes less than 2ms to run in the example above.
+
+The idea is to support faster operations in the future, as well as more features (such as storing the output in CSV).
+
 ## To do
 
-- [ ] Release as a binary on `npm`
-- [ ] Try to make the `bin` smaller in size
-- [ ] Release macOS & Linux builds
-- [ ] Make this thing run faster
-- [ ] Support require of user-defined modules?
-- [ ] Get more coffee
+- [ ] Make this thing run faster (perhaps with [`ts-belt`](https://github.com/mobily/ts-belt) instead of Ramda?);
+- [ ] Support `--omit` flag to remove keys from the output;
+- [ ] Support CSV outputs (using [`@fast-csv/format`](https://github.com/C2FO/fast-csv));
+  - Example: `jstr --csv=package.csv package.json` would create a `package.csv` with all the columns;
+  - Might need to use Notation for nested keys or something? 
+- [ ] Support require of user-defined modules?;
+- [x] Release as a binary on `npm`;
+- [ ] Get more coffee.
 
 ## Credits
 
