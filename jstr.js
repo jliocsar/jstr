@@ -11,13 +11,12 @@ const { hideBin } = require('yargs/helpers')
 const { Notation } = require('notation')
 const R = require('ramda')
 
-const NIL_TO_STRING_MAP = {
-  [null]: 'null',
-  [undefined]: 'undefined',
-}
 const directory = cwd()
 const context = { R }
 
+const uncurryToBinary = R.uncurryN(2)
+
+// #region log
 let logv
 const logMessage = message => stdout.write(message + '\n')
 const logErrorMessage = R.curry((message, error) => {
@@ -26,15 +25,8 @@ const logErrorMessage = R.curry((message, error) => {
 })
 const createLogger = verbose =>
   (logv = R.ifElse(R.always(verbose), logMessage, R.always(void 0)))
-
-const parseJSON = R.binary(
-  R.ifElse(
-    R.isNotNil,
-    R.tryCatch(JSON.parse, logErrorMessage('Invalid JSON')),
-    R.always(null),
-  ),
-)
-
+// #endregion
+// #region files
 const readFile = filePath =>
   new Promise((resolve, reject) =>
     fs.readFile(filePath, (error, buffer) =>
@@ -49,65 +41,84 @@ const readPipedValue = () => {
         input: stdin,
         output: stdout,
         terminal: false,
+        historySize: 0,
       })
       .on('close', () => resolve(lines))
       .on('line', line => (lines += line + '\n')),
   )
 }
-
-const renameFromMapNotation = notated => (replacement, accessKey) =>
-  notated.rename(accessKey, replacement)
+// #endregion
+// #region output
+const copyToClipboard = R.ifElse(
+  R.isNotNil,
+  output => {
+    logv('copying to clipboard')
+    ncp.copy(output)
+  },
+  logErrorMessage("Can't copy `null` or `undefined` to clipboard"),
+)
+const printOrCopyOutput = uncurryToBinary(copy =>
+  R.ifElse(R.always(R.isNil(copy)), logMessage, copyToClipboard),
+)
+// #endregion
+// #region json parsing
+const parseJSON = R.binary(
+  R.ifElse(
+    R.isNotNil,
+    R.tryCatch(JSON.parse, logErrorMessage('Invalid JSON')),
+    R.always(null),
+  ),
+)
+const cachedToString = R.memoizeWith(R.identity, R.identity)
+const parseBufferToJSON = uncurryToBinary(handlerArgs =>
+  R.pipe(cachedToString, parseJSON(R.__, revive(handlerArgs))),
+)
 
 const parseMap = R.unless(R.isNil, parseJSON)
+const renameFromMapNotation = uncurryToBinary(notated =>
+  R.forEachObjIndexed((replacement, accessKey) =>
+    notated.rename(accessKey, replacement),
+  ),
+)
 
-const buildJstrReviver =
-  ({ suffix, prefix, map }) =>
-  (key, value) => {
-    if (key) return value
-    logv('manually reviving...')
-    // map can be a simple JSON or something like
-    // { "name.otherThing": 'otherThingy } => { "name": { "otherThingy": "" } }
-    let parsedValue = value
-    const parsedMap = parseMap(map)
-    if (parsedMap) {
-      const notated = Notation.create(parsedValue)
-      R.forEachObjIndexed(renameFromMapNotation(notated), parsedMap)
-      parsedValue = notated.value
-    }
-    return R.reduce(
-      (revived, key) => {
-        let revivedKey = key
-        if (suffix) revivedKey = revivedKey + suffix
-        if (prefix) revivedKey = prefix + revivedKey
-        revived[revivedKey] = parsedValue[key]
-        return revived
-      },
-      {},
-      R.keys(parsedValue),
-    )
+const createJstrReviver = R.curry(({ suffix, prefix, map }, key, value) => {
+  if (key) return value
+  logv('manually reviving...')
+  // map can be a simple JSON or something like
+  // { "name.otherThing": 'otherThingy } => { "name": { "otherThingy": "" } }
+  let parsedValue = value
+  const parsedMap = parseMap(map)
+  if (parsedMap) {
+    const notated = Notation.create(parsedValue)
+    renameFromMapNotation(notated, parsedMap)
+    parsedValue = notated.value
   }
-
-const reviveFromParser = parser => (key, value) => key ? value : parser(value)
-
-// TODO: Refactor this to use Ramda
-const copyToClipboard = output => () => {
-  if (R.isNil(output)) {
-    logErrorMessage("Can't copy `null` or `undefined` to clipboard")()
-  }
-  logv('copying to clipboard')
-  ncp.copy(output)
-}
-const logOutput = output => () =>
-  logMessage(NIL_TO_STRING_MAP[output] ?? output)
+  return R.reduce(
+    (revived, key) => {
+      let revivedKey = key
+      if (suffix) revivedKey = revivedKey + suffix
+      if (prefix) revivedKey = prefix + revivedKey
+      revived[revivedKey] = parsedValue[key]
+      return revived
+    },
+    {},
+    R.keys(parsedValue),
+  )
+})
 
 const hasToManuallyRevive = R.anyPass([
   R.has('prefix'),
   R.has('suffix'),
   R.has('map'),
 ])
-const revive = R.ifElse(hasToManuallyRevive, buildJstrReviver, R.always(null))
-const replace = R.ifElse(R.isNotNil, reviveFromParser, R.always(null))
-
+const revive = R.when(hasToManuallyRevive, createJstrReviver)
+const evalParser = uncurryToBinary(parser => safeEval(parser, context))
+const reviveFromParser = R.curry((parser, key, value) =>
+  key ? value : evalParser(parser, value),
+)
+const replace = R.unless(R.isNil, reviveFromParser)
+// #endregion
+/** main command handler */
 const handler = async handlerArgs => {
   const {
     spaces,
@@ -119,17 +130,16 @@ const handler = async handlerArgs => {
   } = handlerArgs
   createLogger(verbose)
   logv(`reading from ${input ? 'pipe' : 'file'}...`)
-  const buffer = input
-    ? await readPipedValue()
-    : await readFile(path.resolve(directory, fileOrParser))
-  const data = parseJSON(R.toString(buffer), revive(handlerArgs))
+  const buffer = await (input
+    ? readPipedValue()
+    : R.andThen(R.toString, readFile(path.resolve(directory, fileOrParser))))
+  const data = parseBufferToJSON(handlerArgs, buffer)
   const parserToEval = R.isNil(input) ? parserstr : fileOrParser
-  const parser = R.isNotNil(parserToEval)
-    ? safeEval(parserToEval, context)
-    : null
-  const output = JSON.stringify(data, replace(parser), spaces)
-  // TODO: Change this when copy and log fns are refactored
-  R.ifElse(R.isNotNil, copyToClipboard(output), logOutput(output))(copy)
+  printOrCopyOutput(
+    copy,
+    // output
+    JSON.stringify(data, replace(parserToEval), spaces),
+  )
   exit()
 }
 
