@@ -1,6 +1,6 @@
 <div align=center>
 
-<img src=.github/static/jester.png width=140 />
+<img src=https://i.imgur.com/mB9u0ys.png width=140 />
 
 # jstr
 
@@ -153,14 +153,6 @@ Output (`./my-new-file.json` file):
   "foo:bar": "1.0.0"
 }
 ```
-
-## Benchmarks
-
-Currently basic operations are ~3.4x faster in `jstr` vs [`jq.node`](https://github.com/FGRibreau/jq.node).
-
-Keep in mind `jstr` is still a relatively simpler tool, so this benchmark might change in the future.
-
-![Benchmark](/.github/static/benchmark.png)
 
 ## To do
 
