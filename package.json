@@ -1,5 +1,5 @@
 {
-  "name": "jstr",
+  "name": "@jliocsar/jstr",
   "version": "0.0.1",
   "description": "",
   "engineStrict": true,
@@ -16,13 +16,14 @@
     "safe-eval": "latest",
     "yargs": "latest"
   },
-  "bin": "jstr.js",
+  "bin": {
+    "jstr": "jstr.js"
+  },
   "devDependencies": {
     "pkg": "^5.8.1"
   },
   "scripts": {
-    "build": "node build.js",
-    "postinstall": "npm run build"
+    "build": "node build.js"
   },
   "keywords": [],
   "author": "",
