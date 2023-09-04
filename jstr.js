@@ -111,7 +111,7 @@ const handler = async handlerArgs => {
 
 yargs(hideBin(process.argv))
   .command(
-    '$0 <file> [parser]',
+    '$0 [file] [parser]',
     'parses and prints a JSON file in string version',
     yargs =>
       yargs
@@ -126,8 +126,6 @@ yargs(hideBin(process.argv))
         }),
     handler,
   )
-  .strictCommands()
-  .demandCommand(1)
   .option('spaces', {
     alias: 's',
     type: 'count',
