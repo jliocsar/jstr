@@ -12,7 +12,7 @@ _Simple JavaScript CLI tool to read and parse JSON files_
 
 </div>
 
-- 🪶 **Lightweight**: ~2kb when compressed, keeping it simple & straightforward;
+- 🪶 **Lightweight**: Tiny as f*ck, keeping it simple & straightforward;
 - ⚡ **Fast**: Get parsed results or new JSON files in milliseconds;
 - 🦣 **Functional**: Have the benefits of functional programming in your JSON parsing tool (see [ts-belt](https://mobily.github.io/ts-belt/));
 - 🙅 **No BS**: Manipulate results with good ole' JavaScript, no need to learn cryptic languages/libraries -- use what fits you best.
@@ -41,7 +41,7 @@ jstr --version
 
 ## Usage
 
-> **Important**
+> **Note**
 > `ts-belt` is exposed inside your parser function, you can use it to manipulate your JSON output.
 >
 > Just call your usual namespaces, such as `D` or `A`.
@@ -173,7 +173,9 @@ Simple operations are currently ~1.3x faster in `jstr` than in similar tools suc
 
 ![Benchmark results](https://i.imgur.com/eUQUrx1.png)
 
-Keep in mind `jstr` is a simpler tool right now, as it's still missing some core features like CSV outputs etc, so this might change a lot in the near future.
+> **Important**
+> 
+> Keep in mind that `jstr` is a simpler tool right now, as it's still missing some core features like CSV outputs etc, so this might change a lot in the near future.
 
 ## To do
 
