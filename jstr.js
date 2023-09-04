@@ -12,19 +12,18 @@ const { hideBin } = require('yargs/helpers')
 const { Notation } = require('notation')
 const Belt = require('@mobily/ts-belt')
 
-const { pipe, F, B, D, A } = Belt
+const { pipe, flow, F, B, D, A } = Belt
 const DEBUG = !!env.DEBUG
 const directory = cwd()
 const context = Object.assign({}, Belt)
 
 const asyncReadFile = promisify(fs.readFile)
 
-const logErrorMessage = message => {
-  stderr.write(message)
-  exit(1)
-}
-const logOutputOrCtc = copy =>
-  copy ? ncp.copy.bind(ncp) : stdout.write.bind(stdout)
+const logErrorMessage = flow(stderr.write.bind(stderr), () => exit(1))
+const logOutputOrCtc = B.ifElse(
+  F.always(ncp.copy.bind(ncp)),
+  F.always(stdout.write.bind(stdout)),
+)
 const dlog = console.log.bind(console)
 
 const readJSONFile = filePath =>
@@ -106,7 +105,8 @@ const handler = async handlerArgs => {
     return logErrorMessage('Parser must be of type function')
   }
   const output = JSON.stringify(data, replace(parser), spaces)
-  pipe(output, logOutputOrCtc(copy), exit)
+  pipe(output, logOutputOrCtc(copy))
+  exit()
 }
 
 yargs(hideBin(process.argv))

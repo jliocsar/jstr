@@ -14,14 +14,14 @@ _Simple JavaScript CLI tool to read and parse JSON files_
 
 - 🪶 **Lightweight**: ~2kb when compressed, keeping it simple & straightforward;
 - ⚡ **Fast**: Get parsed results or new JSON files in milliseconds;
-- 🦣 **Functional**: Have the benefits of functional programming in your JSON parsing tool (see [Ramda](https://ramdajs.com/));
+- 🦣 **Functional**: Have the benefits of functional programming in your JSON parsing tool (see [ts-belt](https://mobily.github.io/ts-belt/));
 - 🙅 **No BS**: Manipulate results with good ole' JavaScript, no need to learn cryptic languages/libraries -- use what fits you best.
 
 ## Description
 
-`jstr` (**JS**ON S**tr**ingifier -- pronounced as _jester_) is a CLI tool built with JavaScript & [Ramda](https://github.com/ramda/ramda) to easily parse and manipulate JSON strings or files.
+`jstr` (**JS**ON S**tr**ingifier -- pronounced as _jester_) is a CLI tool built with JavaScript & [`ts-belt`](https://mobily.github.io/ts-belt/) to easily parse and manipulate JSON strings or files.
 
-It was built when I first had the necessity of `JSON` methods from JavaScript without creating a script file, so I could copy & paste those JSON values one file to another. I coded the first POC in ~1 hour and it already had its main premise: using pure JS to interact with JSON files, rather than having to learn new languages or library-specific BS to use such a simple concept.
+It was built when I first had the necessity of `JSON` methods from JavaScript without creating a script file, so I could copy & paste those JSON values one file to another. I coded the first POC in ~1 hour without any library and it already had its main premise: using pure JS to interact with JSON files, rather than having to learn new languages or library-specific BS to use such a simple concept.
 
 This means that the command accepts a JavaScript callback function to parse/select/modify data structures within your JSON if necessary: follow the examples below, write JS and have fun!
 
@@ -41,8 +41,10 @@ jstr --version
 
 ## Usage
 
-> **Note**
-> Ramda is exposed as `R` inside your parser function, you can use it to manipulate your JSON output.
+> **Important**
+> `ts-belt` is exposed inside your parser function, you can use it to manipulate your JSON output.
+>
+> Just call your usual namespaces, such as `D` or `A`.
 
 ```sh
 # Prints the help message w/ all available options
@@ -67,12 +69,8 @@ jstr package.json \
   return capitalized
 }"
 
-# Using Ramda to manipulate the output
-jstr package.json \
-"x => {
-  const withNewPrefix = R.replace('{name}', R.__, 'new-{name}')
-  return withNewPrefix(x.name)
-}"
+# Using ts-belt
+jstr package.json "D.get('name')"
 
 # Receiving input from a piped command
 echo '{"name":"foo"}' | jstr -i 'x => x.name'
@@ -171,17 +169,11 @@ Output (`./my-new-file.json` file):
 
 ## Benchmark
 
-When comparing against similar tools such as [`jq.node`](https://github.com/FGRibreau/jq.node), `jstr` is currently around 1.15x slower in simple operations.
-
-![Benchmark results](https://i.imgur.com/zhjG1QQ.png)
-
-Apparently this is because Ramda takes a while to `require`, since the `jstr` handler itself takes less than 2ms to run in the example above.
-
-The idea is to support faster operations in the future, as well as more features (such as storing the output in CSV).
+---
 
 ## To do
 
-- [ ] Make this thing run faster (perhaps with [`ts-belt`](https://github.com/mobily/ts-belt) instead of Ramda?);
+- [x] Make this thing run faster (perhaps with [`ts-belt`](https://github.com/mobily/ts-belt) instead of Ramda?);
 - [ ] Support `--omit` flag to remove keys from the output;
 - [ ] Support CSV outputs (using [`@fast-csv/format`](https://github.com/C2FO/fast-csv));
   - Example: `jstr --csv=package.csv package.json` would create a `package.csv` with all the columns;
