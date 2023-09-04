@@ -73,7 +73,7 @@ const parseJSON = (value, reviver) => {
     return JSON.parse(value, reviver)
   } catch (error) {
     DEBUG && dlog(error.message)
-    return logErrorMessage('Failed to parse JSON: ' + value)
+    return logErrorMessage('Failed to parse JSON: ' + error.message)
   }
 }
 const hasToManuallyRevive = F.anyPass([
@@ -94,20 +94,22 @@ const createRevivedKeysReducer =
     revived[revivedKey] = parsedValue[key]
     return revived
   }
+const reduceWithReviver = args => original =>
+  pipe(original, D.keys, A.reduce({}, createRevivedKeysReducer(args, original)))
 const revive = args => (key, value) => {
   if (key) return value
   let parsedValue = value
+  const notated = Notation.create(parsedValue)
   const parsedMap = parseJSON(args.map)
   if (parsedMap) {
-    const notated = Notation.create(parsedValue)
     pipe(parsedMap, D.toPairs, A.forEach(createMapReplacer(notated)))
     parsedValue = notated.value
   }
-  return pipe(
-    parsedValue,
-    D.keys,
-    A.reduce({}, createRevivedKeysReducer(args, parsedValue)),
-  )
+  const reducer = reduceWithReviver(args)
+  if (Array.isArray(parsedValue)) {
+    return A.map(parsedValue, reducer)
+  }
+  return reducer(parsedValue)
 }
 const replace = parser =>
   parser ? (key, value) => (key ? value : parser(value)) : null
