@@ -169,7 +169,11 @@ Output (`./my-new-file.json` file):
 
 ## Benchmark
 
----
+Simple operations are currently ~1.3x faster in `jstr` than in similar tools such as [`jq.node`](https://github.com/FGRibreau/jq.node):
+
+![Benchmark results](https://i.imgur.com/eUQUrx1.png)
+
+Keep in mind `jstr` is a simpler tool right now, as it's still missing some core features like CSV outputs etc, so this might change a lot in the near future.
 
 ## To do
 
