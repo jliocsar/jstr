@@ -1,7 +1,7 @@
 {
   "name": "@jliocsar/jstr",
   "version": "0.0.4",
-  "description": "",
+  "description": "Simple JavaScript CLI tool to read and parse JSON files.",
   "engineStrict": true,
   "engines": {
     "npm": ">=6.0.0",
@@ -23,7 +23,8 @@
     "pkg": "latest"
   },
   "scripts": {
-    "build": "node build.js"
+    "build": "node build.js",
+    "publish": "publish --access public"
   },
   "keywords": [],
   "author": "",
