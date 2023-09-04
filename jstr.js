@@ -1,38 +1,59 @@
 #!/usr/bin/env node
 const path = require('path')
-const { stdin, stdout, stderr, exit, cwd, env } = require('process')
-const readline = require('readline')
+const { stdin, stdout, stderr, env, exit, cwd } = require('process')
 const { promisify } = require('util')
 
 const fs = require('graceful-fs')
-const ncp = require('copy-paste')
-const safeEval = require('safe-eval')
+const Belt = require('@mobily/ts-belt')
+const { Notation } = require('notation')
 const { hideBin } = require('yargs/helpers')
 const yargs = require('yargs/yargs')(hideBin(process.argv))
-const { Notation } = require('notation')
-const Belt = require('@mobily/ts-belt')
 
 // #region constants
 const { pipe, flow, F, B, D, A } = Belt
 const DEBUG = !!env.DEBUG
 const directory = cwd()
-const context = Object.assign({}, Belt)
+const context = Belt
 // #endregion
 const asyncReadFile = promisify(fs.readFile)
 // #region logging
 const logErrorMessage = flow(stderr.write.bind(stderr), () => exit(1))
 const logOutputOrCtc = B.ifElse(
-  F.always(ncp.copy.bind(ncp)),
+  F.always(require('copy-paste').copy),
   F.always(stdout.write.bind(stdout)),
 )
 const dlog = console.log.bind(console)
 // #endregion
-// #region
+// #region csv
+const outputWithCsvFormat = data => {
+  const isArray = Array.isArray(data)
+  if (B.nor(isArray, typeof data === 'object')) {
+    return logErrorMessage(
+      'The CSV data type has to be either an object or an array',
+    )
+  }
+  const csv = require('@fast-csv/format')
+  const stream = csv.format({ headers: true })
+  stream.pipe(stdout)
+  try {
+    if (isArray) {
+      A.forEach(data, stream.write.bind(stream))
+    } else {
+      stream.write(data)
+    }
+  } catch (error) {
+    return logErrorMessage('Error formatting CSV: ' + error.message)
+  } finally {
+    stream.end()
+  }
+}
+// #endregion
+// #region file reading
 const readJSONFile = filePath =>
   asyncReadFile(path.resolve(directory, filePath))
 const readPipedValue = (lines = '') =>
   new Promise(resolve =>
-    readline
+    require('readline')
       .createInterface({
         input: stdin,
         output: stdout,
@@ -46,7 +67,7 @@ const getBufferPromiseWithHandler = ({ file: fileOrParser, parser, input }) =>
     ? [readPipedValue(), fileOrParser]
     : [readJSONFile(fileOrParser), parser]
 // #endregion
-// region json parsing
+// #region json parsing
 const parseJSON = (value, reviver) => {
   try {
     return JSON.parse(value, reviver)
@@ -99,28 +120,32 @@ const handler = async args => {
     buffer,
     hasToManuallyRevive(args) ? revive(args) : null,
   )
+  if (args.csv) {
+    return outputWithCsvFormat(data)
+  }
+  const safeEval = require('safe-eval')
   const parser = parserstr ? safeEval(parserstr, context) : null
   if (B.and(parser, typeof parser !== 'function')) {
     return logErrorMessage('Parser must be of type function')
   }
   const output = JSON.stringify(data, replace(parser), args.spaces)
-  pipe(output, logOutputOrCtc(args.copy))
+  await pipe(output, logOutputOrCtc(args.copy))
   exit()
 }
 // #endregion
 yargs
   .command(
     '$0 [file] [parser]',
-    'parses and prints a JSON file in string version',
+    'Parses and prints a JSON file in string version',
     yargs =>
       yargs
         .positional('file', {
           type: 'string',
-          describe: 'the file to read from',
+          describe: 'The file to read from',
         })
         .positional('parser', {
           type: 'string',
-          describe: 'parser function to use',
+          describe: 'Parser function to use',
           default: null,
         }),
     handler,
@@ -128,13 +153,17 @@ yargs
   .option('spaces', {
     alias: 's',
     type: 'count',
-    description: 'number of spaces to add in the JSON output',
+    description: 'Number of spaces to add in the JSON output',
     default: 0,
   })
   .option('copy', {
     alias: 'c',
     type: 'boolean',
     description: 'Copy the output to the clipboard',
+  })
+  .option('csv', {
+    type: 'boolean',
+    description: 'Prints the output in CSV format',
   })
   .option('input', {
     alias: 'i',

@@ -179,6 +179,9 @@ Simple operations are currently ~1.3x faster in `jstr` than in similar tools suc
 
 ## To do
 
+- [ ] Add CSV examples;
+- [ ] Fix array entries with `--suffix` & `--prefix`;
+- [ ] Re-think on how [`Notation`](https://www.npmjs.com/package/notation#usage:~:text=To%20modify%20or%20build%20a%20data%20object%3A) is used and apply a good logic for all `set`/`get` (including arrays);
 - [x] Make this thing run faster (perhaps with [`ts-belt`](https://github.com/mobily/ts-belt) instead of Ramda?);
 - [ ] Support `--omit` flag to remove keys from the output;
 - [ ] Support CSV outputs (using [`@fast-csv/format`](https://github.com/C2FO/fast-csv));

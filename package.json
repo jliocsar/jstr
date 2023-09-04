@@ -12,6 +12,7 @@
   },
   "main": "jstr.js",
   "dependencies": {
+    "@fast-csv/format": "^4.3.5",
     "@mobily/ts-belt": "latest",
     "copy-paste": "latest",
     "graceful-fs": "latest",
