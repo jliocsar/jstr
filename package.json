@@ -23,8 +23,7 @@
     "pkg": "latest"
   },
   "scripts": {
-    "build": "node build.js",
-    "publish": "publish --access public"
+    "build": "node build.js"
   },
   "keywords": [],
   "author": "",
