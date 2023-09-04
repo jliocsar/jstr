@@ -9,10 +9,10 @@
   },
   "main": "jstr.js",
   "dependencies": {
+    "@mobily/ts-belt": "^3.13.1",
     "copy-paste": "latest",
     "graceful-fs": "latest",
     "notation": "latest",
-    "ramda": "latest",
     "safe-eval": "latest",
     "yargs": "latest"
   },

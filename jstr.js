@@ -1,154 +1,117 @@
 #!/usr/bin/env node
 const path = require('path')
-const { stdin, stdout, stderr, exit, cwd } = require('process')
+const { stdin, stdout, stderr, exit, cwd, env } = require('process')
 const readline = require('readline')
+const { promisify } = require('util')
 
 const fs = require('graceful-fs')
 const ncp = require('copy-paste')
 const safeEval = require('safe-eval')
+const yargs = require('yargs/yargs')
 const { hideBin } = require('yargs/helpers')
-const yargs = require('yargs/yargs')(hideBin(process.argv))
 const { Notation } = require('notation')
-const R = require('ramda')
+const Belt = require('@mobily/ts-belt')
 
+const { pipe, F, B, D, A } = Belt
+const DEBUG = !!env.DEBUG
 const directory = cwd()
-const context = { R }
+const context = Object.assign({}, Belt)
 
-const uncurryToBinary = R.uncurryN(2)
+const asyncReadFile = promisify(fs.readFile)
 
-// #region log
-let logv
-const logMessage = message => stdout.write(message + '\n')
-const logErrorMessage = R.curry((message, error) => {
-  stderr.write(error ? `${message}: ${error.message}` : message)
+const logErrorMessage = message => {
+  stderr.write(message)
   exit(1)
-})
-const createLogger = verbose =>
-  (logv = R.ifElse(R.always(verbose), logMessage, R.always(void 0)))
-// #endregion
-// #region files
-const readFile = filePath =>
-  new Promise((resolve, reject) =>
-    fs.readFile(filePath, (error, buffer) =>
-      error ? reject(error) : resolve(buffer),
-    ),
-  )
-const readPipedValue = () => {
-  let lines = ''
-  return new Promise(resolve =>
+}
+const logOutputOrCtc = copy =>
+  copy ? ncp.copy.bind(ncp) : stdout.write.bind(stdout)
+const dlog = console.log.bind(console)
+
+const readJSONFile = filePath =>
+  asyncReadFile(path.resolve(directory, filePath))
+const readPipedValue = (lines = '') =>
+  new Promise(resolve =>
     readline
       .createInterface({
         input: stdin,
         output: stdout,
         terminal: false,
-        historySize: 0,
       })
-      .on('close', () => resolve(lines))
-      .on('line', line => (lines += line + '\n')),
+      .on('line', line => (lines += line + '\n'))
+      .on('close', () => resolve(lines)),
   )
-}
-// #endregion
-// #region output
-const copyToClipboard = R.ifElse(
-  R.isNotNil,
-  output => {
-    logv('copying to clipboard')
-    ncp.copy(output)
-  },
-  logErrorMessage("Can't copy `null` or `undefined` to clipboard"),
-)
-const printOrCopyOutput = uncurryToBinary(copy =>
-  R.ifElse(R.always(R.isNil(copy)), logMessage, copyToClipboard),
-)
-// #endregion
-// #region json parsing
-const parseJSON = R.binary(
-  R.ifElse(
-    R.isNotNil,
-    R.tryCatch(JSON.parse, logErrorMessage('Invalid JSON')),
-    R.always(null),
-  ),
-)
-const cachedToString = R.memoizeWith(R.identity, R.identity)
-const parseBufferToJSON = uncurryToBinary(handlerArgs =>
-  R.pipe(cachedToString, parseJSON(R.__, revive(handlerArgs))),
-)
+const getBufferPromiseWithHandler = ({ file: fileOrParser, parser, input }) =>
+  input
+    ? [readPipedValue(), fileOrParser]
+    : [readJSONFile(fileOrParser), parser]
 
-const parseMap = R.unless(R.isNil, parseJSON)
-const renameFromMapNotation = uncurryToBinary(notated =>
-  R.forEachObjIndexed((replacement, accessKey) =>
-    notated.rename(accessKey, replacement),
-  ),
-)
-
-const createJstrReviver = R.curry(({ suffix, prefix, map }, key, value) => {
-  if (key) return value
-  logv('manually reviving...')
-  // map can be a simple JSON or something like
-  // { "name.otherThing": 'otherThingy } => { "name": { "otherThingy": "" } }
-  let parsedValue = value
-  const parsedMap = parseMap(map)
-  if (parsedMap) {
-    const notated = Notation.create(parsedValue)
-    renameFromMapNotation(notated, parsedMap)
-    parsedValue = notated.value
+const parseJSON = (value, reviver) => {
+  try {
+    return JSON.parse(value, reviver)
+  } catch (error) {
+    DEBUG && dlog(error.message)
+    return logErrorMessage('Failed to parse JSON: ' + value)
   }
-  return R.reduce(
-    (revived, key) => {
+}
+const hasToManuallyRevive = F.anyPass([
+  D.get('suffix'),
+  D.get('prefix'),
+  D.get('map'),
+])
+const revive =
+  ({ suffix, prefix, map }) =>
+  (key, value) => {
+    if (key) return value
+    let parsedValue = value
+    const parsedMap = parseJSON(map)
+    if (parsedMap) {
+      const notated = Notation.create(parsedValue)
+      const parsedMapKeys = D.toPairs(parsedMap)
+      const parsedMapKeysLength = A.length(parsedMapKeys)
+      let mapKeyIndex = 0
+      while (mapKeyIndex < parsedMapKeysLength) {
+        const [accessKey, replacement] = parsedMapKeys[mapKeyIndex]
+        notated.rename(accessKey, replacement)
+        ++mapKeyIndex
+      }
+      parsedValue = notated.value
+    }
+    const keys = D.keys(parsedValue)
+    const keysLength = A.length(keys)
+    const revived = {}
+    let index = 0
+    while (index < keysLength) {
+      const key = keys[index]
       let revivedKey = key
       if (suffix) revivedKey = revivedKey + suffix
       if (prefix) revivedKey = prefix + revivedKey
       revived[revivedKey] = parsedValue[key]
-      return revived
-    },
-    {},
-    R.keys(parsedValue),
-  )
-})
-
-const hasToManuallyRevive = R.anyPass([
-  R.has('prefix'),
-  R.has('suffix'),
-  R.has('map'),
-])
-const revive = R.when(hasToManuallyRevive, createJstrReviver)
-const evalParser = uncurryToBinary(parser => safeEval(parser, context))
-const reviveFromParser = R.curry((parser, key, value) =>
-  key ? value : evalParser(parser, value),
-)
-const replace = R.unless(R.isNil, reviveFromParser)
-// #endregion
-/** main command handler */
-const handler = async handlerArgs => {
-  const {
-    spaces,
-    verbose,
-    copy,
-    input,
-    file: fileOrParser,
-    parser: parserstr,
-  } = handlerArgs
-  if (R.not(R.or(fileOrParser, input))) {
-    logErrorMessage('File or input argument must be provided')()
+      ++index
+    }
+    return revived
   }
-  createLogger(verbose)
-  logv(`reading from ${input ? 'pipe' : 'file'}...`)
-  const buffer = await (input
-    ? readPipedValue()
-    : R.andThen(R.toString, readFile(path.resolve(directory, fileOrParser))))
-  const data = parseBufferToJSON(handlerArgs, buffer)
-  const parserToEval = R.isNil(input) ? parserstr : fileOrParser
-  printOrCopyOutput(
-    copy,
-    // output
-    JSON.stringify(data, replace(parserToEval), spaces),
+const replace = parser =>
+  parser ? (key, value) => (key ? value : parser(value)) : null
+
+const handler = async handlerArgs => {
+  const { spaces, copy } = handlerArgs
+  const [bufferPromise, parserstr] = getBufferPromiseWithHandler(handlerArgs)
+  const buffer = (await bufferPromise).toString()
+  const data = parseJSON(
+    buffer,
+    hasToManuallyRevive(handlerArgs) ? revive(handlerArgs) : null,
   )
-  exit()
+  const parser = parserstr ? safeEval(parserstr, context) : null
+  if (B.and(parser, typeof parser !== 'function')) {
+    return logErrorMessage('Parser must be of type function')
+  }
+  const output = JSON.stringify(data, replace(parser), spaces)
+  pipe(output, logOutputOrCtc(copy), exit)
 }
 
-yargs
+yargs(hideBin(process.argv))
   .command(
-    '$0 [file] [parser]',
+    '$0 <file> [parser]',
     'parses and prints a JSON file in string version',
     yargs =>
       yargs
@@ -170,11 +133,6 @@ yargs
     type: 'count',
     description: 'number of spaces to add in the JSON output',
     default: 0,
-  })
-  .option('verbose', {
-    alias: 'v',
-    type: 'boolean',
-    description: 'Run with verbose logging',
   })
   .option('copy', {
     alias: 'c',
