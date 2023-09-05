@@ -5,6 +5,7 @@ const { promisify } = require('util')
 
 const fs = require('graceful-fs')
 const Belt = require('@mobily/ts-belt')
+const safeEval = require('safe-eval')
 const { Notation } = require('notation')
 const { hideBin } = require('yargs/helpers')
 const yargs = require('yargs/yargs')(hideBin(process.argv))
@@ -79,7 +80,7 @@ const parseJSON = (value, reviver) => {
     return logErrorMessage('Failed to parse JSON: ' + error.message)
   }
 }
-const hasToManuallyRevive = F.anyPass([
+const hasRevivingOptions = F.anyPass([
   D.get('suffix'),
   D.get('prefix'),
   D.get('map'),
@@ -99,7 +100,7 @@ const createRevivedKeysReducer =
   }
 const reduceWithReviver = args => original =>
   pipe(original, D.keys, A.reduce({}, createRevivedKeysReducer(args, original)))
-const revive = args => (key, value) => {
+const revive = (args, parser) => (key, value) => {
   if (key) return value
   let parsedValue = value
   const map = args.map
@@ -110,31 +111,28 @@ const revive = args => (key, value) => {
     parsedValue = notated.value
   }
   const reducer = reduceWithReviver(args)
-  if (Array.isArray(parsedValue)) {
-    return A.map(parsedValue, reducer)
-  }
-  return reducer(parsedValue)
+  const revived = Array.isArray(parsedValue)
+    ? A.map(parsedValue, reducer)
+    : reducer(parsedValue)
+  return parser ? parser(revived) : revived
 }
-const replace = parser =>
-  parser ? (key, value) => (key ? value : parser(value)) : null
 // #endregion
 // #region main
 const handler = async args => {
   const [bufferPromise, parserstr] = getBufferPromiseWithHandler(args)
-  const buffer = (await bufferPromise).toString()
-  const data = parseJSON(
-    buffer,
-    hasToManuallyRevive(args) ? revive(args) : null,
-  )
-  if (args.csv) {
-    return outputWithCsvFormat(data)
-  }
-  const safeEval = require('safe-eval')
   const parser = parserstr ? safeEval(parserstr, context) : null
   if (B.and(parser, typeof parser !== 'function')) {
     return logErrorMessage('Parser must be of type function')
   }
-  const output = JSON.stringify(data, replace(parser), args.spaces)
+  const buffer = (await bufferPromise).toString()
+  const reviver = B.or(parser, hasRevivingOptions(args))
+    ? revive(args, parser)
+    : null
+  const data = parseJSON(buffer, reviver)
+  if (args.csv) {
+    return outputWithCsvFormat(data)
+  }
+  const output = JSON.stringify(data, null, args.spaces)
   await pipe(output, logOutputOrCtc(args.copy))
   exit()
 }
