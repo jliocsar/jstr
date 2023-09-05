@@ -69,6 +69,9 @@ jstr package.json \
   return capitalized
 }"
 
+# Omit fields from the output
+jstr package.json -o='["name"]'
+
 # Using ts-belt
 jstr package.json "D.get('name')"
 

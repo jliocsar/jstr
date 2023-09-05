@@ -72,39 +72,45 @@ const getBufferPromiseWithHandler = ({ file: fileOrParser, parser, input }) =>
     : [readJSONFile(fileOrParser), parser]
 // #endregion
 // #region json parsing
-const parseJSON = (value, reviver) => {
+const parseJSON = (identifier, value, reviver) => {
+  if (B.not(value)) return null
   try {
     return JSON.parse(value, reviver)
   } catch (error) {
     DEBUG && dlog(error.message)
-    return logErrorMessage('Failed to parse JSON: ' + error.message)
+    return logErrorMessage(
+      `Failed to parse JSON "${identifier}":\n` + error.message,
+    )
   }
 }
 const hasRevivingOptions = F.anyPass([
   D.get('suffix'),
   D.get('prefix'),
+  D.get('omit'),
   D.get('map'),
 ])
 const createMapReplacer = notated => mapped => {
   const [accessKey, replacement] = mapped
   notated.rename(accessKey, replacement)
 }
-const createRevivedKeysReducer =
-  ({ suffix, prefix }, parsedValue) =>
-  (revived, key) => {
+const createRevivedKeysReducer = ({ suffix, prefix, omit }, parsedValue) => {
+  const parsedOmit = omit?.split(',')
+  return (revived, key) => {
+    if (parsedOmit && A.includes(parsedOmit, key)) return revived
     let revivedKey = key
     if (suffix) revivedKey = revivedKey + suffix
     if (prefix) revivedKey = prefix + revivedKey
     revived[revivedKey] = parsedValue[key]
     return revived
   }
+}
 const reduceWithReviver = args => original =>
   pipe(original, D.keys, A.reduce({}, createRevivedKeysReducer(args, original)))
 const revive = (args, parser) => (key, value) => {
   if (key) return value
   let parsedValue = value
   const map = args.map
-  const parsedMap = map ? parseJSON(map) : null
+  const parsedMap = parseJSON('map', map)
   if (parsedMap) {
     const notated = Notation.create(parsedValue)
     pipe(parsedMap, D.toPairs, A.forEach(createMapReplacer(notated)))
@@ -121,14 +127,14 @@ const revive = (args, parser) => (key, value) => {
 const handler = async args => {
   const [bufferPromise, parserstr] = getBufferPromiseWithHandler(args)
   const parser = parserstr ? safeEval(parserstr, context) : null
-  if (B.and(parser, typeof parser !== 'function')) {
+  if (parser && B.not(typeof parser === 'function')) {
     return logErrorMessage('Parser must be of type function')
   }
   const buffer = (await bufferPromise).toString()
   const reviver = B.or(parser, hasRevivingOptions(args))
     ? revive(args, parser)
     : null
-  const data = parseJSON(buffer, reviver)
+  const data = parseJSON('data', buffer, reviver)
   if (args.csv) {
     return outputWithCsvFormat(data)
   }
@@ -156,7 +162,7 @@ yargs
   )
   .option('spaces', {
     alias: 's',
-    type: 'count',
+    type: 'number',
     description: 'Number of spaces to add in the JSON output',
     default: 0,
   })
@@ -178,6 +184,11 @@ yargs
     alias: 'm',
     type: 'string',
     description: 'Map of keys to replace',
+  })
+  .option('omit', {
+    alias: 'o',
+    type: 'string',
+    description: 'Array of keys to omit',
   })
   .option('suffix', {
     type: 'string',
