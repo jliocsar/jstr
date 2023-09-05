@@ -36,10 +36,13 @@ const outputWithCsvFormat = data => {
   const stream = csv.format({ headers: true })
   stream.pipe(stdout)
   try {
+    // TODO: Use `Notation` across with `set`/`get`
+    const flattened = value => Notation.create(value).flatten().value
+    const write = stream.write.bind(stream)
     if (isArray) {
-      A.forEach(data, stream.write.bind(stream))
+      A.forEach(A.map(data, flattened), write)
     } else {
-      stream.write(data)
+      pipe(data, flattened, write)
     }
   } catch (error) {
     return logErrorMessage('Error formatting CSV: ' + error.message)
@@ -99,9 +102,9 @@ const reduceWithReviver = args => original =>
 const revive = args => (key, value) => {
   if (key) return value
   let parsedValue = value
-  const notated = Notation.create(parsedValue)
   const parsedMap = parseJSON(args.map)
   if (parsedMap) {
+    const notated = Notation.create(parsedValue)
     pipe(parsedMap, D.toPairs, A.forEach(createMapReplacer(notated)))
     parsedValue = notated.value
   }
