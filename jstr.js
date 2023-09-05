@@ -102,7 +102,8 @@ const reduceWithReviver = args => original =>
 const revive = args => (key, value) => {
   if (key) return value
   let parsedValue = value
-  const parsedMap = parseJSON(args.map)
+  const map = args.map
+  const parsedMap = map ? parseJSON(map) : null
   if (parsedMap) {
     const notated = Notation.create(parsedValue)
     pipe(parsedMap, D.toPairs, A.forEach(createMapReplacer(notated)))
