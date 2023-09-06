@@ -10,22 +10,18 @@ const { Notation } = require('notation')
 const { hideBin } = require('yargs/helpers')
 const yargs = require('yargs/yargs')(hideBin(process.argv))
 
-// #region constants
 const { pipe, flow, F, B, D, A } = Belt
 const DEBUG = !!env.DEBUG
 const directory = cwd()
-const context = Belt
-// #endregion
-const asyncReadFile = promisify(fs.readFile)
-// #region logging
+const context = Object.assign({ fetch }, Belt)
+
 const logErrorMessage = flow(stderr.write.bind(stderr), () => exit(1))
 const logOutputOrCtc = B.ifElse(
   F.always(require('copy-paste').copy),
   F.always(stdout.write.bind(stdout)),
 )
 const dlog = console.log.bind(console)
-// #endregion
-// #region csv
+
 const outputWithCsvFormat = data => {
   const isArray = Array.isArray(data)
   if (B.nor(isArray, typeof data === 'object')) {
@@ -51,8 +47,8 @@ const outputWithCsvFormat = data => {
     stream.end()
   }
 }
-// #endregion
-// #region file reading
+
+const asyncReadFile = promisify(fs.readFile)
 const readJSONFile = filePath =>
   asyncReadFile(path.resolve(directory, filePath))
 const readPipedValue = (lines = '') =>
@@ -66,12 +62,20 @@ const readPipedValue = (lines = '') =>
       .on('line', line => (lines += line + '\n'))
       .on('close', () => resolve(lines)),
   )
-const getBufferPromiseWithHandler = ({ file: fileOrParser, parser, input }) =>
-  input
-    ? [readPipedValue(), fileOrParser]
-    : [readJSONFile(fileOrParser), parser]
-// #endregion
-// #region json parsing
+const generateBufferPromiseWithHandler = function* ({
+  file: fileOrParser,
+  parser,
+  input,
+}) {
+  if (input) {
+    yield fileOrParser
+    return readPipedValue()
+  }
+  yield parser
+  return readJSONFile(fileOrParser)
+}
+
+const stringifyJSON = (data, { spaces }) => JSON.stringify(data, null, spaces)
 const parseJSON = (identifier, value, reviver) => {
   if (B.not(value)) return null
   try {
@@ -83,16 +87,17 @@ const parseJSON = (identifier, value, reviver) => {
     )
   }
 }
+
 const hasRevivingOptions = F.anyPass([
   D.get('suffix'),
   D.get('prefix'),
   D.get('omit'),
   D.get('map'),
 ])
-const createMapReplacer = notated => mapped => {
-  const [accessKey, replacement] = mapped
-  notated.rename(accessKey, replacement)
-}
+const createMapReplacer =
+  notated =>
+  ([accessKey, replacement]) =>
+    notated.rename(accessKey, replacement)
 const createRevivedKeysReducer = ({ suffix, prefix, omit }, parsedValue) => {
   const parsedOmit = omit?.split(',')
   return (revived, key) => {
@@ -106,7 +111,7 @@ const createRevivedKeysReducer = ({ suffix, prefix, omit }, parsedValue) => {
 }
 const reduceWithReviver = args => original =>
   pipe(original, D.keys, A.reduce({}, createRevivedKeysReducer(args, original)))
-const revive = (args, parser) => (key, value) => {
+const revive = args => (key, value) => {
   if (key) return value
   let parsedValue = value
   const map = args.map
@@ -120,29 +125,30 @@ const revive = (args, parser) => (key, value) => {
   const revived = Array.isArray(parsedValue)
     ? A.map(parsedValue, reducer)
     : reducer(parsedValue)
-  return parser ? parser(revived) : revived
+  return revived
 }
-// #endregion
-// #region main
+
 const handler = async args => {
-  const [bufferPromise, parserstr] = getBufferPromiseWithHandler(args)
+  const bufferGen = generateBufferPromiseWithHandler(args)
+  const { value: parserstr } = bufferGen.next()
   const parser = parserstr ? safeEval(parserstr, context) : null
   if (parser && B.not(typeof parser === 'function')) {
     return logErrorMessage('Parser must be of type function')
   }
+  const { value: bufferPromise } = bufferGen.next()
   const buffer = (await bufferPromise).toString()
   const reviver = B.or(parser, hasRevivingOptions(args))
     ? revive(args, parser)
     : null
   const data = parseJSON('data', buffer, reviver)
+  const handled = (await parser?.(data)) ?? data
   if (args.csv) {
-    return outputWithCsvFormat(data)
+    return outputWithCsvFormat(handled)
   }
-  const output = JSON.stringify(data, null, args.spaces)
-  await pipe(output, logOutputOrCtc(args.copy))
+  await pipe(stringifyJSON(handled, args), logOutputOrCtc(args.copy))
   exit()
 }
-// #endregion
+
 yargs
   .command(
     '$0 [file] [parser]',

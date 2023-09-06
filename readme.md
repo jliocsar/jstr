@@ -42,9 +42,9 @@ jstr --version
 ## Usage
 
 > **Note**
-> `ts-belt` is exposed inside your parser function, you can use it to manipulate your JSON output.
->
-> Just call your usual namespaces, such as `D` or `A`.
+> `ts-belt` is exposed inside your parser function, you can use it to manipulate your JSON output, just call your usual namespaces, such as `D` or `A`.
+> 
+> You can also call `fetch` if your Node.js version supports it.
 
 ```sh
 # Prints the help message w/ all available options
@@ -70,7 +70,16 @@ jstr package.json \
 }"
 
 # Omit fields from the output
-jstr package.json -o='["name"]'
+jstr package.json -o=name,version
+
+# Fetching information with an async handler
+jstr package.json \
+"async x => {
+  const packageJsonPath = x.homepage.replace('https://github.com', '') + '/main/package.json'
+  const response = await fetch('https://raw.githubusercontent.com' + packageJsonPath)
+  const data = await response.json()
+  return { status: response.status, data }
+}"
 
 # Using ts-belt
 jstr package.json "D.get('name')"
@@ -126,13 +135,16 @@ Input (Output from running `my-fetch-script.js`):
 ```
 
 ```sh
-node my-fetch-script.js | jstr -i \
-  -s=2 \
+node my-fetch-script.js | jstr -s=2 -i \
   -m='{"coordinates.longitude":"longitude","coordinates.latitude":"latitude"}' \
   '({ latitude, longitude }) => [latitude, longitude]'
-  # If you don't want to mess around with the mapping of fields,
-  # you can just use pure JS instead and skip the `-m` option`:
-  # ({ coordinates: { latitude, longitude } }) => [latitude, longitude]
+```
+
+If you don't want to mess around with the mapping of fields,
+you can just use pure JS instead and skip the `-m` option`:
+
+```js
+({ coordinates: { latitude, longitude } }) => [latitude, longitude]
 ```
 
 **Output:**
@@ -222,13 +234,8 @@ Simple operations are currently ~1.3x faster in `jstr` than in similar tools suc
 ## To do
 
 - [ ] Re-think on how [`Notation`](https://www.npmjs.com/package/notation#usage:~:text=To%20modify%20or%20build%20a%20data%20object%3A) is used and apply a good logic for all `set`/`get` (including arrays);
-- [ ] Support `--omit` flag to remove keys from the output;
 - [ ] Support require of user-defined modules?;
-- [x] Add CSV examples;
-- [x] Fix array entries with `--suffix` & `--prefix`;
-- [x] Make this thing run faster (perhaps with [`ts-belt`](https://github.com/mobily/ts-belt) instead of Ramda?);
-- [x] Support CSV outputs (using [`@fast-csv/format`](https://github.com/C2FO/fast-csv));
-- [x] Release as a binary on `npm`;
+- [ ] Write docs;
 - [ ] Get more coffee.
 
 ## Credits
