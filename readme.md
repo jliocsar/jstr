@@ -4,9 +4,9 @@
 
 # jstr
 
-![CLI](https://img.shields.io/badge/cli_tool-333?logo=gnubash&logoColor=fff)
+![CLI](https://img.shields.io/badge/cli-333?logo=gnubash&logoColor=fff)
 ![JavaScript](https://img.shields.io/badge/javascript-100%25-333?logo=javascript)
-![Repository compressed size](https://img.badgesize.io/jliocsar/jstr/main/jstr.js.svg?compression=gzip)
+![Package size](https://img.shields.io/bundlejs/size/%40jliocsar/jstr?logo=npm)
 
 _Simple JavaScript CLI tool to read and parse JSON files_
 
@@ -59,6 +59,9 @@ jstr package.json
 # Prints the content from `package.json` with 2 spaces
 jstr -s=2 package.json
 
+# Omit fields from the output
+jstr -o=name,version package.json
+
 # Prints the value of the key `"name"` in the `package.json` file
 jstr package.json 'x => x.name'
 
@@ -68,9 +71,6 @@ jstr package.json \
   const capitalized = name[0].toUpperCase() + name.slice(1)
   return capitalized
 }"
-
-# Omit fields from the output
-jstr package.json -o=name,version
 
 # Fetching information with an async handler
 jstr package.json \
@@ -225,7 +225,7 @@ Friend
 
 Simple operations are currently ~1.3x faster in `jstr` than in similar tools such as [`jq.node`](https://github.com/FGRibreau/jq.node):
 
-![Benchmark results](https://i.imgur.com/eUQUrx1.png)
+![Benchmark results](https://i.imgur.com/ZJYD32m.png)
 
 > **Important**
 > 
