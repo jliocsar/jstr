@@ -221,7 +221,25 @@ Some
 Friend
 ```
 
-## Benchmark
+### API Usage (In progress 🏗️)
+
+You can call `jstr` from your Node.js script through its API:
+
+**Example:**
+
+```js
+const { jstr } = require('@jliocsar/jstr/api')
+
+;(async () => {
+  console.log(await jstr(
+    JSON.stringify({ name: 'foo' }),
+    "x => x['foo:name']",
+    { prefix: 'foo:' }
+  ))
+})()
+```
+
+## Benchmarks
 
 Simple operations are currently ~1.3x faster in `jstr` than in similar tools such as [`jq.node`](https://github.com/FGRibreau/jq.node):
 
@@ -234,10 +252,11 @@ Simple operations are currently ~1.3x faster in `jstr` than in similar tools suc
 ## To do
 
 - [ ] Re-think on how [`Notation`](https://www.npmjs.com/package/notation#usage:~:text=To%20modify%20or%20build%20a%20data%20object%3A) is used and apply a good logic for all `set`/`get` (including arrays);
+- [ ] Fix `fetch` when unsupported;
 - [ ] Support require of user-defined modules?;
-- [ ] Write docs;
+- [ ] Write docs (what could be used? Markdown only pref.);
 - [ ] Get more coffee.
 
 ## Credits
 
-[Logo icon by Flaticon](https://www.flaticon.com/free-icons/jester)
+[Logo icon from Flaticon](https://www.flaticon.com/free-icons/jester)

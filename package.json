@@ -1,6 +1,6 @@
 {
   "name": "@jliocsar/jstr",
-  "version": "0.0.93",
+  "version": "0.0.94",
   "description": "Simple JavaScript CLI tool to read and parse JSON files",
   "author": "JC (https://github.com/jliocsar)",
   "license": "MIT",
@@ -10,7 +10,7 @@
     "npm": ">=6.0.0",
     "yarn": "please use npm"
   },
-  "main": "jstr.js",
+  "main": "jstr",
   "dependencies": {
     "@fast-csv/format": "^4.3.5",
     "@mobily/ts-belt": "latest",
@@ -21,10 +21,7 @@
     "yargs": "latest"
   },
   "bin": {
-    "jstr": "jstr.js"
-  },
-  "scripts": {
-    "build": "node build.js"
+    "jstr": "jstr"
   },
   "keywords": [
     "json",
