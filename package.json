@@ -6,10 +6,6 @@
   "license": "MIT",
   "engineStrict": true,
   "browsers": false,
-  "engines": {
-    "npm": ">=6.0.0",
-    "yarn": "please use npm"
-  },
   "main": "jstr",
   "dependencies": {
     "@fast-csv/format": "^4.3.5",
