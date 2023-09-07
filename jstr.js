@@ -37,11 +37,8 @@ const handler = async args => {
   const [bufferPromise, parserstr] = generateBufferPromiseWithHandler(args)
   const buffer = (await bufferPromise).toString()
   const output = await jstr(buffer, parserstr, args)
-  if (args.copy) {
-    require('copy-paste').copy(output)
-  } else {
-    stdout.write(output)
-  }
+  if (args.copy) require('copy-paste').copy(output)
+  else stdout.write(output)
   exit()
 }
 
