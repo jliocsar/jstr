@@ -251,8 +251,6 @@ Simple operations are currently ~1.3x faster in `jstr` than in similar tools suc
 
 ## To do
 
-- [ ] Re-think on how [`Notation`](https://www.npmjs.com/package/notation#usage:~:text=To%20modify%20or%20build%20a%20data%20object%3A) is used and apply a good logic for all `set`/`get` (including arrays);
-- [ ] Fix `fetch` when unsupported;
 - [ ] Support require of user-defined modules?;
 - [ ] Write docs (what could be used? Markdown only pref.);
 - [ ] Get more coffee.

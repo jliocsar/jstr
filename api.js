@@ -1,4 +1,4 @@
-const { stdout, stderr, env, exit, versions } = require('process')
+const { stderr, env, exit, versions } = require('process')
 
 const Belt = require('@mobily/ts-belt')
 const safeEval = require('safe-eval')
@@ -12,33 +12,26 @@ const context = Object.assign({ fetch: major > 17 ? fetch : null }, Belt)
 const logErrorMessage = flow(stderr.write.bind(stderr), () => exit(1))
 const dlog = console.log.bind(console)
 
-const outputWithCsvFormat = data => {
+const convertToCsv = data => {
   const isArray = Array.isArray(data)
-  if (B.nor(isArray, typeof data === 'object')) {
+  if (B.nor(isArray, typeof data === 'object'))
     return logErrorMessage(
       'The CSV data type has to be either an object or an array',
     )
-  }
+  const flattened = value => Notation.create(value).flatten().value
   const csv = require('@fast-csv/format')
-  const stream = csv.format({ headers: true })
-  stream.pipe(stdout)
   try {
-    const flattened = Notation.create(value).flatten().value
-    const write = stream.write.bind(stream)
-    if (isArray) {
-      A.forEach(A.map(data, flattened), write)
-    } else {
-      pipe(data, flattened, write)
-    }
+    return csv.writeToString(
+      isArray ? A.map(data, flattened) : [flattened(data)],
+      { headers: true },
+    )
   } catch (error) {
     return logErrorMessage('Error formatting CSV: ' + error.message)
-  } finally {
-    stream.end()
   }
 }
 
-const stringifyJSON = (data, { spaces }) => JSON.stringify(data, null, spaces)
-const parseJSON = (identifier, value, reviver) => {
+const stringifyToJson = (data, { spaces }) => JSON.stringify(data, null, spaces)
+const parseJson = (identifier, value, reviver) => {
   if (B.not(value)) return null
   try {
     return JSON.parse(value, reviver)
@@ -73,7 +66,7 @@ const revive = args => (key, value) => {
   if (key) return value
   const notated = Notation.create(value)
   const map = args.map
-  const parsedMap = parseJSON('map', map)
+  const parsedMap = parseJson('map', map)
   if (parsedMap) {
     pipe(parsedMap, D.toPairs, A.forEach(createMapReplacer(notated)))
   }
@@ -113,9 +106,7 @@ module.exports.jstr = async (input, parserstr, options = {}) => {
   const reviver = B.or(parser, hasRevivingOptions(options))
     ? revive(options)
     : null
-  const data = parseJSON('data', input, reviver)
+  const data = parseJson('data', input, reviver)
   const handled = (await parser?.(data)) ?? data
-  return options.csv
-    ? outputWithCsvFormat(handled)
-    : stringifyJSON(handled, options)
+  return options.csv ? convertToCsv(handled) : stringifyToJson(handled, options)
 }
