@@ -19,13 +19,9 @@ _Simple JavaScript CLI tool to read and parse JSON files_
 
 ## Description
 
-`jstr` (**JS**ON S**tr**ingifier -- pronounced as _jester_) is a CLI tool built with JavaScript & [`ts-belt`](https://mobily.github.io/ts-belt/) to easily parse and manipulate JSON strings or files.
+**JS**ON S**tr**ingifier (`jstr`, pronounced as _jester_) is a CLI tool built with JavaScript & [`ts-belt`](https://mobily.github.io/ts-belt/) to easily parse and manipulate JSON strings or files.
 
-It was built when I first had the necessity of `JSON` methods from JavaScript without creating a script file, so I could copy & paste those JSON values one file to another. I coded the first POC in ~1 hour without any library and it already had its main premise: using pure JS to interact with JSON files, rather than having to learn new languages or library-specific BS to use such a simple concept.
-
-This means that the command accepts a JavaScript callback function to parse/select/modify data structures within your JSON if necessary: follow the examples below, write JS and have fun!
-
-_TL;DR This is a `JSON.parse`/`stringify` wrapper focused in CLI commands rather than JS scripts._
+It is a `JSON.parse`/`stringify` wrapper focused in CLI commands rather than JS scripts.
 
 ## Installation
 
@@ -39,58 +35,11 @@ To make sure it installed successfully:
 jstr --version
 ```
 
-## Usage
-
-> **Note**
-> `ts-belt` is exposed inside your parser function, you can use it to manipulate your JSON output, just call your usual namespaces, such as `D` or `A`.
-> 
-> You can also call `fetch` if your Node.js version supports it.
-
-```sh
-# Prints the help message w/ all available options
-jstr --help
-
-# Copies the content in `package.json` to the clipboard
-jstr -c package.json
-
-# Prints the content from `package.json` in a single line
-jstr package.json
-
-# Prints the content from `package.json` with 2 spaces
-jstr -s=2 package.json
-
-# Omit fields from the output
-jstr -o=name,version package.json
-
-# Prints the value of the key `"name"` in the `package.json` file
-jstr package.json 'x => x.name'
-
-# In case you need to use more lines for the snippet
-jstr package.json \
-"({ name }) => {
-  const capitalized = name[0].toUpperCase() + name.slice(1)
-  return capitalized
-}"
-
-# Fetching information with an async handler
-jstr package.json \
-"async x => {
-  const packageJsonPath = x.homepage.replace('https://github.com', '') + '/main/package.json'
-  const response = await fetch('https://raw.githubusercontent.com' + packageJsonPath)
-  const data = await response.json()
-  return { status: response.status, data }
-}"
-
-# Using ts-belt
-jstr package.json "D.get('name')"
-
-# Receiving input from a piped command
-echo '{"name":"foo"}' | jstr -i 'x => x.name'
-```
-
 ---
 
-## Advanced Usage
+## Usage
+
+Before anything: **[Read the docs!](https://jliocsar.gitbook.io/jstr/)**
 
 ### Map field names
 
@@ -221,7 +170,7 @@ Some
 Friend
 ```
 
-### API Usage (In progress 🏗️)
+### API Usage
 
 You can call `jstr` from your Node.js script through its API:
 
@@ -239,20 +188,9 @@ const { jstr } = require('@jliocsar/jstr/api')
 })()
 ```
 
-## Benchmarks
-
-Simple operations are currently ~1.3x faster in `jstr` than in similar tools such as [`jq.node`](https://github.com/FGRibreau/jq.node):
-
-![Benchmark results](https://i.imgur.com/ZJYD32m.png)
-
-> **Important**
-> 
-> Keep in mind that `jstr` is a simpler tool right now, as it's still missing some core features like CSV outputs etc, so this might change a lot in the near future.
-
 ## To do
 
 - [ ] Support require of user-defined modules?;
-- [ ] Write docs (what could be used? Markdown only pref.);
 - [ ] Get more coffee.
 
 ## Credits
