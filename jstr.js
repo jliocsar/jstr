@@ -59,25 +59,25 @@ yargs
         }),
     handler,
   )
-  .option('spaces', {
-    alias: 's',
-    type: 'number',
-    description: 'Number of spaces to add in the JSON output',
-    default: 0,
-  })
+  .version()
   .option('copy', {
     alias: 'c',
     type: 'boolean',
     description: 'Copy the output to the clipboard',
   })
-  .option('csv', {
-    type: 'boolean',
-    description: 'Prints the output in CSV format',
-  })
   .option('input', {
     alias: 'i',
     type: 'boolean',
     description: 'Reads the JSON string from stdin',
+  })
+  .option('csv', {
+    type: 'boolean',
+    description: 'Prints the output in CSV format',
+  })
+  .option('spaces', {
+    alias: 's',
+    type: 'number',
+    description: 'Number of spaces to add in the JSON output',
   })
   .option('map', {
     alias: 'm',
@@ -87,24 +87,19 @@ yargs
   .option('omit', {
     alias: 'o',
     type: 'string',
-    description: 'Array of keys to omit',
+    description: 'Keys to omit (comma separated)',
   })
   .option('suffix', {
     type: 'string',
-    description: 'Adds a suffix to every key of the JSON file (first level)',
+    description: 'Adds a suffix to every key of the JSON file',
   })
   .option('prefix', {
     type: 'string',
-    description: 'Adds a prefix to every key of the JSON file (first level)',
+    description: 'Adds a prefix to every key of the JSON file',
   })
   .example('$0 package.json', 'prints the package.json file content')
   .example(
     '$0 myjsonfile.json "x => x.myKey"',
     'prints `myKey` from the JSON file',
   )
-  .example('$0 -s=2 myjsonfile.json', 'prints with 2 spaces')
-  .example(
-    '$0 --prefix=foo --suffix=bar file.json',
-    'adds a prefix and suffix to every key on the 1st level',
-  )
-  .version().argv
+  .example('$0 -s=2 myjsonfile.json', 'prints with 2 spaces').argv
