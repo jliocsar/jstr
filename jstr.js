@@ -1,21 +1,13 @@
-const path = require('path')
-const { stdin, stdout, exit, cwd } = require('process')
-const { promisify } = require('util')
+const { stdin, stdout, exit } = require('node:process')
 
-const fs = require('graceful-fs')
 const { hideBin } = require('yargs/helpers')
-const yargs = require('yargs/yargs')(hideBin(process.argv))
+const yargs = require('yargs')(hideBin(process.argv))
 
 const { jstr } = require('./api')
 
-const directory = cwd()
-
-const asyncReadFile = promisify(fs.readFile)
-const readJSONFile = filePath =>
-  asyncReadFile(path.resolve(directory, filePath))
 const readPipedValue = (lines = '') =>
   new Promise(resolve =>
-    require('readline')
+    require('node:readline')
       .createInterface({
         input: stdin,
         output: stdout,
@@ -28,17 +20,17 @@ const generateBufferPromiseWithHandler = ({
   file: fileOrParser,
   parser,
   input,
-}) =>
-  input
-    ? [readPipedValue(), fileOrParser]
-    : [readJSONFile(fileOrParser), parser]
+}) => (input ? [readPipedValue(), fileOrParser] : [fileOrParser, parser])
 
 const handler = async args => {
   const [bufferPromise, parserstr] = generateBufferPromiseWithHandler(args)
   const buffer = (await bufferPromise).toString()
   const output = await jstr(buffer, parserstr, args)
-  if (args.copy) require('copy-paste').copy(output)
-  else stdout.write(output)
+  if (args.copy) {
+    require('copy-paste').copy(output)
+  } else {
+    stdout.write(output)
+  }
   exit()
 }
 
@@ -102,4 +94,5 @@ yargs
     '$0 myjsonfile.json "x => x.myKey"',
     'prints `myKey` from the JSON file',
   )
-  .example('$0 -s=2 myjsonfile.json', 'prints with 2 spaces').argv
+  .example('$0 -s=2 myjsonfile.json', 'prints with 2 spaces')
+  .parse()

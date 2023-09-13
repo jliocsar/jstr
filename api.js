@@ -1,4 +1,6 @@
-const { stderr, env, exit, versions } = require('process')
+const path = require('node:path')
+const { stderr, env, exit, versions, cwd } = require('process')
+const fs = require('node:fs/promises')
 
 const Belt = require('@mobily/ts-belt')
 const safeEval = require('safe-eval')
@@ -8,16 +10,20 @@ const { pipe, flow, F, B, D, A } = Belt
 const DEBUG = !!env.DEBUG
 const [major] = versions.node.split('.').map(Number)
 const context = Object.assign({ fetch: major > 17 ? fetch : null }, Belt)
+const directory = cwd()
 
 const logErrorMessage = flow(stderr.write.bind(stderr), () => exit(1))
 const dlog = console.log.bind(console)
 
+const readJSONFile = filePath => fs.readFile(path.resolve(directory, filePath))
+
 const convertToCsv = data => {
   const isArray = Array.isArray(data)
-  if (B.nor(isArray, typeof data === 'object'))
+  if (B.nor(isArray, typeof data === 'object')) {
     return logErrorMessage(
       'The CSV data type has to be either an object or an array',
     )
+  }
   const flattened = value => Notation.create(value).flatten().value
   const csv = require('@fast-csv/format')
   try {
@@ -32,7 +38,9 @@ const convertToCsv = data => {
 
 const stringifyToJson = (data, { spaces }) => JSON.stringify(data, null, spaces)
 const parseJson = (identifier, value, reviver) => {
-  if (B.not(value)) return null
+  if (!value) {
+    return null
+  }
   try {
     return JSON.parse(value, reviver)
   } catch (error) {
@@ -51,10 +59,16 @@ const createMapReplacer =
 const createRevivedKeysReducer = ({ suffix, prefix, omit }, parsedValue) => {
   const parsedOmit = omit?.split(',')
   return (revived, key) => {
-    if (parsedOmit && A.includes(parsedOmit, key)) return revived
+    if (parsedOmit && A.includes(parsedOmit, key)) {
+      return revived
+    }
     let revivedKey = key
-    if (suffix) revivedKey = revivedKey + suffix
-    if (prefix) revivedKey = prefix + revivedKey
+    if (suffix) {
+      revivedKey = revivedKey + suffix
+    }
+    if (prefix) {
+      revivedKey = prefix + revivedKey
+    }
     revived[revivedKey] = parsedValue[key]
     return revived
   }
@@ -63,7 +77,9 @@ const reduceWithReviver = args => original =>
   pipe(original, D.keys, A.reduce({}, createRevivedKeysReducer(args, original)))
 
 const revive = args => (key, value) => {
-  if (key) return value
+  if (key) {
+    return value
+  }
   const notated = Notation.create(value)
   const map = args.map
   const parsedMap = parseJson('map', map)
@@ -103,10 +119,9 @@ module.exports.jstr = async (input, parserstr, options = {}) => {
   if (parser && B.not(typeof parser === 'function')) {
     return logErrorMessage('Parser must be of type function')
   }
-  const reviver = B.or(parser, hasRevivingOptions(options))
-    ? revive(options)
-    : null
-  const data = parseJson('data', input, reviver)
-  const handled = (await parser?.(data)) ?? data
+  const reviver = parser || hasRevivingOptions(options) ? revive(options) : null
+  const json = options.input ? input : await readJSONFile(input)
+  const parsed = parseJson('data', json, reviver)
+  const handled = (await parser?.(parsed)) ?? parsed
   return options.csv ? convertToCsv(handled) : stringifyToJson(handled, options)
 }

@@ -35,6 +35,14 @@ To make sure it installed successfully:
 jstr --version
 ```
 
+### Bun version
+
+`jstr` also exposes a version to run with [`Bun`](https://github.com/oven-sh/bun):
+
+```sh
+jstr:bun --version
+```
+
 ---
 
 ## Usage
@@ -181,7 +189,7 @@ const { jstr } = require('@jliocsar/jstr/api')
 
 ;(async () => {
   console.log(await jstr(
-    JSON.stringify({ name: 'foo' }),
+    './my-file.json',
     "x => x['foo:name']",
     { prefix: 'foo:' }
   ))
