@@ -14,7 +14,7 @@ _Simple JavaScript CLI tool to read and parse JSON files_
 
 - 🪶 **Lightweight**: Tiny as f*ck, keeping it simple & straightforward;
 - ⚡ **Fast**: Get parsed results or new JSON files in milliseconds;
-- 🦣 **Functional**: Have the benefits of functional programming in your JSON parsing tool (see [ts-belt](https://mobily.github.io/ts-belt/));
+- 🦣 **Functional**: Have the benefits of functional programming in your JSON parsing tool (see [`ts-belt`](https://mobily.github.io/ts-belt/));
 - 🙅 **No BS**: Manipulate results with good ole' JavaScript, no need to learn cryptic languages/libraries -- use what fits you best.
 
 ## Description
@@ -22,6 +22,10 @@ _Simple JavaScript CLI tool to read and parse JSON files_
 **JS**ON S**tr**ingifier (`jstr`, pronounced as _jester_) is a CLI tool built with JavaScript & [`ts-belt`](https://mobily.github.io/ts-belt/) to easily parse and manipulate JSON strings or files.
 
 It is a `JSON.parse`/`stringify` wrapper focused in CLI commands rather than JS scripts.
+
+## Requirements
+
+To run `jstr`, you must have either [Node.js](https://nodejs.org/en/blog/release/v17.0.0) ^v17.x.x, or [Bun](https://bun.sh/blog/bun-v1.0) ^v1.0.0.
 
 ## Installation
 
@@ -62,7 +66,7 @@ Input (`./package.json` file):
 ```
 
 ```sh
-jstr -s=2 -m='{"devDependencies.pkg":"devDependencies.foo"}' --prefix="bar:" package.json
+jstr -s 2 -m '{"devDependencies.pkg":"devDependencies.foo"}' --prefix "bar:" package.json
 ```
 
 Output:
@@ -92,8 +96,8 @@ Input (Output from running `my-fetch-script.js`):
 ```
 
 ```sh
-node my-fetch-script.js | jstr -s=2 -i \
-  -m='{"coordinates.longitude":"longitude","coordinates.latitude":"latitude"}' \
+node my-fetch-script.js | jstr -s 2 -i \
+  -m '{"coordinates.longitude":"longitude","coordinates.latitude":"latitude"}' \
   '({ latitude, longitude }) => [latitude, longitude]'
 ```
 
@@ -123,7 +127,7 @@ Input (`./package.json` file):
 ```
 
 ```sh
-jstr -s=2 -m='{"devDependencies.pkg":"bar"}' --prefix="foo:" package.json \
+jstr -s 2 -m '{"devDependencies.pkg":"bar"}' --prefix "foo:" package.json \
   "x => {
     x['foo:name'] = x['foo:name'].toUpperCase()
     return x
@@ -166,7 +170,7 @@ Input (`./users.json` file):
 ```
 
 ```sh
-jstr users.json "flow(A.map(D.get('friends')), A.flat)" --csv > users.csv
+jstr users.json --csv "flow(A.map(D.get('friends')), A.flat)" > users.csv
 ```
 
 Output (`./users.csv` file):

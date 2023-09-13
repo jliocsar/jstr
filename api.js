@@ -1,5 +1,5 @@
 const path = require('node:path')
-const { stderr, env, exit, versions, cwd } = require('process')
+const { stderr, env, exit, cwd } = require('process')
 const fs = require('node:fs/promises')
 
 const Belt = require('@mobily/ts-belt')
@@ -8,8 +8,7 @@ const { Notation } = require('notation')
 
 const { pipe, flow, F, B, D, A } = Belt
 const DEBUG = !!env.DEBUG
-const [major] = versions.node.split('.').map(Number)
-const context = Object.assign({ fetch: major > 17 ? fetch : null }, Belt)
+const context = Object.assign({ fetch }, Belt)
 const directory = cwd()
 
 const logErrorMessage = flow(stderr.write.bind(stderr), () => exit(1))
@@ -107,6 +106,7 @@ const hasRevivingOptions = F.anyPass([
  * @param {string} [parser] An optional parser function to run through the output
  * @param {{
  *  csv: boolean;
+ *  input: boolean;
  *  spaces: number;
  *  map: string;
  *  prefix: string;
