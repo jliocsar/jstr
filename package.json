@@ -11,7 +11,6 @@
     "@fast-csv/format": "latest",
     "@mobily/ts-belt": "latest",
     "copy-paste": "latest",
-    "graceful-fs": "latest",
     "notation": "latest",
     "safe-eval": "latest",
     "yargs": "latest"
