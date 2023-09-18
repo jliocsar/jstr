@@ -1,8 +1,7 @@
-#!/usr/bin/env node
 const { stdin, stdout, exit } = require('node:process')
 
 const { hideBin } = require('yargs/helpers')
-const yargs = require('yargs/yargs')(hideBin(process.argv))
+const yargs = require('yargs')(hideBin(process.argv))
 
 const { jstr } = require('./api')
 
@@ -28,6 +27,7 @@ const handler = async args => {
   const buffer = (await bufferPromise).toString()
   const output = await jstr(buffer, parserstr, args)
   if (args.copy) {
+    // TODO: Make this faster
     const { default: cp } = await import('clipboardy')
     await cp.write(output)
   } else {
