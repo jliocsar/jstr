@@ -8,7 +8,7 @@ const { Notation } = require('notation')
 
 const { pipe, flow, F, B, D, A } = Belt
 const DEBUG = !!env.DEBUG
-const context = Object.assign({ fetch }, Belt)
+const context = Object.assign({}, Belt)
 const directory = cwd()
 
 const logErrorMessage = flow(stderr.write.bind(stderr), () => exit(1))
