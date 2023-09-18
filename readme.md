@@ -25,7 +25,7 @@ It is a `JSON.parse`/`stringify` wrapper focused in CLI commands rather than JS 
 
 ## Requirements
 
-To run `jstr`, you must have either [Node.js](https://nodejs.org/en/blog/release/v17.0.0) ^v17.x.x, or [Bun](https://bun.sh/blog/bun-v1.0) ^v1.0.0.
+To run `jstr`, you must have either [Node.js](https://nodejs.org/en/blog/release/v18.0.0) ^v18.x.x, or [Bun](https://bun.sh/blog/bun-v1.0) ^v1.0.0.
 
 ## Installation
 
