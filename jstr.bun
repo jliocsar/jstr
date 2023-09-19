@@ -1,0 +1,2 @@
+#!/usr/bin/env -S bun run --bun
+require('./jstr.js')
