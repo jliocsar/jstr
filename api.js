@@ -14,7 +14,13 @@ const directory = cwd()
 const logErrorMessage = flow(stderr.write.bind(stderr), () => exit(1))
 const dlog = console.log.bind(console)
 
-const readJSONFile = filePath => fs.readFile(path.resolve(directory, filePath))
+const readJSONFile = async filePath => {
+  try {
+    return await fs.readFile(path.resolve(directory, filePath))
+  } catch (error) {
+    return logErrorMessage(error.message)
+  }
+}
 
 const convertToCsv = data => {
   const isArray = Array.isArray(data)
@@ -35,7 +41,8 @@ const convertToCsv = data => {
   }
 }
 
-const stringifyToJson = (data, { spaces }) => JSON.stringify(data, null, spaces)
+const stringifyToJson = (data, { spaces }) =>
+  JSON.stringify(data, null, Number(spaces))
 const parseJson = (identifier, value, reviver) => {
   if (!value) {
     return null
@@ -115,6 +122,9 @@ const hasRevivingOptions = F.anyPass([
  * }} [options] Options used in the formatting
  */
 module.exports.jstr = async (input, parserstr, options = {}) => {
+  if (!input) {
+    return logErrorMessage('File path or input are required! See "--help"')
+  }
   const parser = parserstr ? safeEval(parserstr, context) : null
   if (parser && B.not(typeof parser === 'function')) {
     return logErrorMessage('Parser must be of type function')

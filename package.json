@@ -14,9 +14,10 @@
     "@fast-csv/format": "latest",
     "@mobily/ts-belt": "latest",
     "clipboardy": "latest",
+    "colorette": "latest",
+    "minimist": "latest",
     "notation": "latest",
-    "safe-eval": "latest",
-    "yargs": "latest"
+    "safe-eval": "latest"
   },
   "files": [
     "jstr",

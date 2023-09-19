@@ -51,7 +51,9 @@ jstr.bun --version
 
 ## Usage
 
-Before anything: **[Read the docs!](https://jliocsar.gitbook.io/jstr/)**
+### [Documentation](https://jliocsar.gitbook.io/jstr/)
+
+Make sure you read the docs! It has all the details about each command option and such.
 
 ### Map field names
 
