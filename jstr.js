@@ -5,6 +5,8 @@ const yargs = require('yargs')
 
 const { jstr } = require('./api')
 
+const isBun = /\/bun$/.test(argv[1])
+
 const readPipedValue = (lines = '') =>
   new Promise(resolve =>
     require('node:readline')
@@ -37,6 +39,7 @@ const handler = async args => {
 }
 
 yargs(hideBin(argv))
+  .scriptName(isBun ? 'jstr:bun' : 'jstr')
   .command(
     '$0 [file] [parser]',
     'Parses and prints a JSON file in string version',
