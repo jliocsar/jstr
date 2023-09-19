@@ -44,7 +44,7 @@ jstr --version
 `jstr` also exposes a version to run with [`Bun`](https://github.com/oven-sh/bun):
 
 ```sh
-bjstr --version
+jstr.bun --version
 ```
 
 ---

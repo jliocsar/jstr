@@ -1,6 +1,6 @@
 {
   "name": "@jliocsar/jstr",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Simple JavaScript CLI tool to read and parse JSON files",
   "author": "JC (https://github.com/jliocsar)",
   "license": "MIT",
@@ -18,6 +18,12 @@
     "safe-eval": "latest",
     "yargs": "latest"
   },
+  "files": [
+    "jstr",
+    "jstr.bun",
+    "api.js",
+    "jstr.js"
+  ],
   "bin": {
     "jstr": "jstr",
     "jstr.bun": "jstr.bun"
