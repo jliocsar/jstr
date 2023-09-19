@@ -1,5 +1,5 @@
 const path = require('node:path')
-const { stderr, env, exit, cwd } = require('process')
+const { stderr, env, exit, cwd } = require('node:process')
 const fs = require('node:fs/promises')
 
 const Belt = require('@mobily/ts-belt')
@@ -119,7 +119,7 @@ module.exports.jstr = async (input, parserstr, options = {}) => {
   if (parser && B.not(typeof parser === 'function')) {
     return logErrorMessage('Parser must be of type function')
   }
-  const reviver = parser || hasRevivingOptions(options) ? revive(options) : null
+  const reviver = hasRevivingOptions(options) ? revive(options) : null
   const json = options.input ? input : await readJSONFile(input)
   const parsed = parseJson('data', json, reviver)
   const handled = (await parser?.(parsed)) ?? parsed

@@ -1,9 +1,12 @@
-const { stdin, stdout, exit } = require('node:process')
+const { stdin, stdout, exit, argv } = require('node:process')
 
-const { hideBin } = require('yargs/helpers')
-const yargs = require('yargs')(hideBin(process.argv))
+const Belt = require('@mobily/ts-belt')
+const { hideBin: hideNodeBin } = require('yargs/helpers')
+const yargs = require('yargs')
 
 const { jstr } = require('./api')
+
+const { pipe, flow, B, A, S } = Belt
 
 const readPipedValue = (lines = '') =>
   new Promise(resolve =>
@@ -36,7 +39,13 @@ const handler = async args => {
   exit()
 }
 
-yargs
+const args = pipe(
+  argv,
+  hideNodeBin,
+  A.filter(flow(S.endsWith('/.bun/bin/bun'), B.not)),
+)
+
+yargs(args)
   .command(
     '$0 [file] [parser]',
     'Parses and prints a JSON file in string version',
