@@ -34,7 +34,7 @@ const CommandOptionsAlias = {
   [CommandOptionsMap.Map]: 'm',
 }
 
-const printVersion = async () => {
+async function printVersion() {
   const packageJson = await fs.readFile(
     path.resolve(__dirname, 'package.json'),
     { encoding: 'utf-8' },
@@ -44,7 +44,7 @@ const printVersion = async () => {
   exit()
 }
 
-const printHelp = (exitCode = 0) => {
+function printHelp(exitCode = 0) {
   const bin = isBun ? 'jstr.bun' : 'jstr'
   const option = value => color.blueBright(`--${value}`)
   const alias = value => color.blueBright(`-${CommandOptionsAlias[value]}`)
@@ -122,8 +122,8 @@ cat package.json | ${bin} -i -s 2 ${color.dim(
   exit(exitCode)
 }
 
-const readPipedValue = (lines = '') =>
-  new Promise(resolve =>
+function readPipedValue(lines = '') {
+  return new Promise(resolve =>
     require('node:readline')
       .createInterface({
         input: stdin,
@@ -133,12 +133,12 @@ const readPipedValue = (lines = '') =>
       .on('line', line => (lines += line + '\n'))
       .on('close', () => resolve(lines)),
   )
-
-const generateBufferPromiseWithHandler = async ({
+}
+async function generateBufferPromiseWithHandler({
   _: [fileOrParser, parser],
   input,
   clipboard,
-}) => {
+}) {
   if (input && clipboard) {
     return printHelp(1)
   }
@@ -152,7 +152,7 @@ const generateBufferPromiseWithHandler = async ({
   return [fileOrParser, parser]
 }
 
-const handler = async args => {
+async function handler(args) {
   if (args.help) {
     return printHelp()
   }

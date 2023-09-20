@@ -14,7 +14,7 @@ const directory = cwd()
 const logErrorMessage = flow(stderr.write.bind(stderr), () => exit(1))
 const dlog = console.log.bind(console)
 
-const readJSONFile = async filePath => {
+async function readJSONFile(filePath) {
   try {
     return await fs.readFile(path.resolve(directory, filePath))
   } catch (error) {
@@ -22,14 +22,16 @@ const readJSONFile = async filePath => {
   }
 }
 
-const convertToCsv = data => {
+function flattened(value) {
+  return Notation.create(value).flatten().value
+}
+function convertToCsv(data) {
   const isArray = Array.isArray(data)
   if (B.nor(isArray, typeof data === 'object')) {
     return logErrorMessage(
       'The CSV data type has to be either an object or an array',
     )
   }
-  const flattened = value => Notation.create(value).flatten().value
   const csv = require('@fast-csv/format')
   try {
     return csv.writeToString(
@@ -41,9 +43,11 @@ const convertToCsv = data => {
   }
 }
 
-const stringifyToJson = (data, { spaces }) =>
-  JSON.stringify(data, null, Number(spaces))
-const parseJson = (identifier, value, reviver) => {
+function stringifyToJson(data, { spaces }) {
+  return JSON.stringify(data, null, Number(spaces))
+}
+
+function parseJson(identifier, value, reviver) {
   if (!value) {
     return null
   }
@@ -57,12 +61,11 @@ const parseJson = (identifier, value, reviver) => {
   }
 }
 
-const createMapReplacer =
-  notated =>
-  ([accessKey, replacement]) =>
-    notated.rename(accessKey, replacement)
+function createMapReplacer(notated) {
+  return ([accessKey, replacement]) => notated.rename(accessKey, replacement)
+}
 
-const createRevivedKeysReducer = ({ suffix, prefix, omit }, parsedValue) => {
+function createRevivedKeysReducer({ suffix, prefix, omit }, parsedValue) {
   const parsedOmit = omit?.split(',')
   return (revived, key) => {
     if (parsedOmit && A.includes(parsedOmit, key)) {
@@ -79,25 +82,33 @@ const createRevivedKeysReducer = ({ suffix, prefix, omit }, parsedValue) => {
     return revived
   }
 }
-const reduceWithReviver = args => original =>
-  pipe(original, D.keys, A.reduce({}, createRevivedKeysReducer(args, original)))
+function reduceWithReviver(args) {
+  return original =>
+    pipe(
+      original,
+      D.keys,
+      A.reduce({}, createRevivedKeysReducer(args, original)),
+    )
+}
 
-const revive = args => (key, value) => {
-  if (key) {
-    return value
+function revive(args) {
+  return (key, value) => {
+    if (key) {
+      return value
+    }
+    const notated = Notation.create(value)
+    const map = args.map
+    const parsedMap = parseJson('map', map)
+    if (parsedMap) {
+      pipe(parsedMap, D.toPairs, A.forEach(createMapReplacer(notated)))
+    }
+    const parsedValue = notated.value
+    const reducer = reduceWithReviver(args)
+    const revived = Array.isArray(parsedValue)
+      ? A.map(parsedValue, reducer)
+      : reducer(parsedValue)
+    return revived
   }
-  const notated = Notation.create(value)
-  const map = args.map
-  const parsedMap = parseJson('map', map)
-  if (parsedMap) {
-    pipe(parsedMap, D.toPairs, A.forEach(createMapReplacer(notated)))
-  }
-  const parsedValue = notated.value
-  const reducer = reduceWithReviver(args)
-  const revived = Array.isArray(parsedValue)
-    ? A.map(parsedValue, reducer)
-    : reducer(parsedValue)
-  return revived
 }
 
 const hasRevivingOptions = F.anyPass([
@@ -121,7 +132,7 @@ const hasRevivingOptions = F.anyPass([
  *  omit: string;
  * }} [options] Options used in the formatting
  */
-module.exports.jstr = async (input, parserstr, options = {}) => {
+module.exports.jstr = async function (input, parserstr, options = {}) {
   if (!input) {
     return logErrorMessage('File path or input are required! See "--help"')
   }
