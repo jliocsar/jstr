@@ -10,6 +10,7 @@ const { jstr } = require('./api')
 
 const { pipe } = Belt
 const isBun = /\/bun$/.test(argv[1])
+let cp = null
 
 const CommandOptionsMap = {
   Help: 'help',
@@ -21,6 +22,7 @@ const CommandOptionsMap = {
   Omit: 'omit',
   Prefix: 'prefix',
   Suffix: 'suffix',
+  Clipboard: 'clipboard',
   Version: 'version',
 }
 const CommandOptionsAlias = {
@@ -44,10 +46,10 @@ const printVersion = async () => {
 
 const printHelp = (exitCode = 0) => {
   const bin = isBun ? 'jstr.bun' : 'jstr'
-  const option = value => color.blue(`--${value}`)
-  const alias = value => color.blue(`-${CommandOptionsAlias[value]}`)
+  const option = value => color.blueBright(`--${value}`)
+  const alias = value => color.blueBright(`-${CommandOptionsAlias[value]}`)
   const helpMessage = `
-${color.magenta('@jliocsar/jstr')}
+${color.magentaBright('@jliocsar/jstr')}
 
 ${pipe(
   'Simple JavaScript CLI tool to read and parse JSON files',
@@ -58,42 +60,55 @@ ${pipe(
 ${color.underline(color.bold('Usage'))}
 ${bin} [options] <file|parser> [parser]
 
-${color.bold('Options')}
-- ${color.cyan('Help')}   (${option(CommandOptionsMap.Help)} or ${alias(
+${color.underline(color.bold('Options'))}
+- ${color.cyanBright('Help')}      (${option(
     CommandOptionsMap.Help,
-  )}): Prints the help message ${color.dim('[Boolean]')}
-- ${color.cyan('Copy')}   (${option(CommandOptionsMap.Copy)} or ${alias(
+  )} or ${alias(CommandOptionsMap.Help)}): Prints the help message ${color.dim(
+    '[Boolean]',
+  )}
+- ${color.cyanBright('Copy')}      (${option(
+    CommandOptionsMap.Copy,
+  )} or ${alias(
     CommandOptionsMap.Copy,
   )}): Copy the output to the clipboard ${color.dim('[Boolean]')}
-- ${color.cyan('Input')}  (${option(CommandOptionsMap.Input)} or ${alias(
+- ${color.cyanBright('Input')}     (${option(
+    CommandOptionsMap.Input,
+  )} or ${alias(
     CommandOptionsMap.Input,
   )}): Reads the JSON string from stdin ${color.dim('[Boolean]')}
-- ${color.cyan('CSV')}    (${option(
+- ${color.cyanBright('CSV')}       (${option(
     CommandOptionsMap.CSV,
   )}): Reads the JSON string from stdin ${color.dim('[Boolean]')}
-- ${color.cyan('Spaces')} (${option(CommandOptionsMap.Spaces)} or ${alias(
+- ${color.cyanBright('Clipboard')} (${option(
+    CommandOptionsMap.Clipboard,
+  )}): Reads the JSON string from the clipboard ${color.dim('[Boolean]')}
+- ${color.cyanBright('Spaces')}    (${option(
+    CommandOptionsMap.Spaces,
+  )} or ${alias(
     CommandOptionsMap.Spaces,
   )}): Number of spaces to add in the JSON output ${color.dim('[Integer]')}
-- ${color.cyan('Map')}    (${option(CommandOptionsMap.Map)} or ${alias(
+- ${color.cyanBright('Map')}       (${option(CommandOptionsMap.Map)} or ${alias(
     CommandOptionsMap.Map,
   )}): Map of keys to rename ${color.dim('[String, JSON format]')}
-- ${color.cyan('Omit')}   (${option(CommandOptionsMap.Omit)} or ${alias(
+- ${color.cyanBright('Omit')}      (${option(
+    CommandOptionsMap.Omit,
+  )} or ${alias(
     CommandOptionsMap.Omit,
   )}): Keys to omit from the output ${color.dim(
     '[String, comma separated format]',
   )}
-- ${color.cyan('Prefix')} (${option(
+- ${color.cyanBright('Prefix')}    (${option(
     CommandOptionsMap.Prefix,
   )}): Adds a prefix to every key (first-level) of the output ${color.dim(
     '[String]',
   )}
-- ${color.cyan('Suffix')} (${option(
+- ${color.cyanBright('Suffix')}    (${option(
     CommandOptionsMap.Suffix,
   )}): Adds a suffix to every key (first-level) of the output ${color.dim(
     '[String]',
   )}
 
-${color.bold('Examples')}
+${color.underline(color.bold('Examples'))}
 ${bin} package.json ${color.dim('# prints the package.json file content')}
 ${bin} myjsonfile.json "x => x.myKey" ${color.dim(
     '# prints `myKey` from the JSON file',
@@ -101,6 +116,7 @@ ${bin} myjsonfile.json "x => x.myKey" ${color.dim(
 cat package.json | ${bin} -i -s 2 ${color.dim(
     '# prints with 2 spaces while reading from stdin',
   )}
+
 `
   stdout.write(helpMessage)
   exit(exitCode)
@@ -117,10 +133,24 @@ const readPipedValue = (lines = '') =>
       .on('line', line => (lines += line + '\n'))
       .on('close', () => resolve(lines)),
   )
-const generateBufferPromiseWithHandler = ({
+
+const generateBufferPromiseWithHandler = async ({
   _: [fileOrParser, parser],
   input,
-}) => (input ? [readPipedValue(), fileOrParser] : [fileOrParser, parser])
+  clipboard,
+}) => {
+  if (input && clipboard) {
+    return printHelp(1)
+  }
+  if (input) {
+    return [readPipedValue(), fileOrParser]
+  }
+  if (clipboard) {
+    cp ??= (await import('clipboardy')).default
+    return [cp.read(), fileOrParser]
+  }
+  return [fileOrParser, parser]
+}
 
 const handler = async args => {
   if (args.help) {
@@ -129,12 +159,14 @@ const handler = async args => {
   if (args.version) {
     return printVersion()
   }
-  const [bufferPromise, parserstr] = generateBufferPromiseWithHandler(args)
+  const [bufferPromise, parserstr] = await generateBufferPromiseWithHandler(
+    args,
+  )
   const buffer = (await bufferPromise)?.toString()
   const output = await jstr(buffer, parserstr, args)
   if (args.copy) {
     // TODO: Make this faster
-    const { default: cp } = await import('clipboardy')
+    cp ??= (await import('clipboardy')).default
     await cp.write(output)
   } else {
     stdout.write(output)
@@ -167,6 +199,7 @@ const handler = async args => {
           CommandOptionsMap.Help,
           CommandOptionsMap.Input,
           CommandOptionsMap.Version,
+          CommandOptionsMap.Clipboard,
         ],
       }),
     )

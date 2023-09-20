@@ -130,7 +130,8 @@ module.exports.jstr = async (input, parserstr, options = {}) => {
     return logErrorMessage('Parser must be of type function')
   }
   const reviver = hasRevivingOptions(options) ? revive(options) : null
-  const json = options.input ? input : await readJSONFile(input)
+  const json =
+    options.input || options.clipboard ? input : await readJSONFile(input)
   const parsed = parseJson('data', json, reviver)
   const handled = (await parser?.(parsed)) ?? parsed
   return options.csv ? convertToCsv(handled) : stringifyToJson(handled, options)
