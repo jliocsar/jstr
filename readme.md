@@ -1,12 +1,12 @@
 <div align=center>
 
-<img src=https://i.imgur.com/mB9u0ys.png width=140 />
+<img src=https://i.imgur.com/LIN9cMA.png width=140 />
 
 # jstr
 
-[![Documentation](https://img.shields.io/badge/docs-333?logo=gitbook&logoColor=fff)](https://jliocsar.gitbook.io/jstr/)
-[![JavaScript](https://img.shields.io/badge/javascript-100%25-333?logo=javascript)](#)
-[![Package size](https://img.shields.io/bundlejs/size/%40jliocsar/jstr?logo=npm)](https://www.npmjs.com/package/@jliocsar/jstr)
+[![Documentation](https://img.shields.io/badge/docs-222?logo=gitbook&logoColor=fff&style=flat-square)](https://jliocsar.gitbook.io/jstr/)
+[![JavaScript](https://img.shields.io/badge/javascript-100%25-222?logo=javascript&style=flat-square)](#)
+[![Package size](https://img.shields.io/npm/v/%40jliocsar/jstr?logo=npm&style=flat-square&color=222)](https://www.npmjs.com/package/@jliocsar/jstr)
 
 _Simple JavaScript CLI tool to read and parse JSON files_
 
@@ -209,4 +209,4 @@ const { jstr } = require('@jliocsar/jstr/api')
 
 ## Credits
 
-[Logo icon from Flaticon](https://www.flaticon.com/free-icons/jester)
+[Logo icon from Freepik](https://www.freepik.com/)
