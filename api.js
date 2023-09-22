@@ -5,11 +5,10 @@ const fs = require('node:fs/promises')
 const Belt = require('@mobily/ts-belt')
 const safeEval = require('safe-eval')
 const { Notation } = require('notation')
-const { request } = require('undici')
 
 const { pipe, flow, F, B, D, A } = Belt
 const DEBUG = !!env.DEBUG
-const context = Object.assign({ request }, Belt)
+const context = Object.assign({}, Belt)
 const directory = cwd()
 
 const logErrorMessage = flow(stderr.write.bind(stderr), () => exit(1))
