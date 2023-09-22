@@ -5,9 +5,12 @@ const fs = require('node:fs/promises')
 const minimist = require('minimist')
 const color = require('colorette')
 const Belt = require('@mobily/ts-belt')
+const { request } = require('undici')
 
 const { jstr } = require('./api')
 
+const VERSION_REQUEST_URL =
+  'https://raw.githubusercontent.com/jliocsar/jstr/main/package.json'
 const { pipe } = Belt
 const isBun = /\/bun$/.test(argv[1])
 let cp = null
@@ -34,13 +37,33 @@ const CommandOptionsAlias = {
   [CommandOptionsMap.Map]: 'm',
 }
 
+function splitVersion(version) {
+  return version.split('.').map(Number)
+}
+
 async function printVersion() {
   const packageJson = await fs.readFile(
     path.resolve(__dirname, 'package.json'),
     { encoding: 'utf-8' },
   )
-  const { version } = JSON.parse(packageJson)
-  stdout.write(version)
+  let { version: versionMessage } = JSON.parse(packageJson)
+  try {
+    const { body } = await request(VERSION_REQUEST_URL)
+    const { version } = await body.json()
+    const [major, minor, patch] = splitVersion(version)
+    const [installedMajor, installedMinor, installedPatch] =
+      splitVersion(versionMessage)
+    const isOutdated =
+      major > installedMajor || minor > installedMinor || patch > installedPatch
+    if (isOutdated) {
+      versionMessage +=
+        '\n\n' + color.yellowBright(`⚠️ Newer version available: ${version}`)
+    }
+  } catch (error) {
+    stderr.write(error.message)
+    exit(1)
+  }
+  stdout.write(versionMessage + '\n')
   exit()
 }
 
