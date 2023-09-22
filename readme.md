@@ -4,9 +4,9 @@
 
 # jstr
 
-[![Documentation](https://img.shields.io/badge/docs-222?logo=gitbook&logoColor=fff&style=flat-square)](https://jliocsar.gitbook.io/jstr/)
-[![JavaScript](https://img.shields.io/badge/javascript-100%25-222?logo=javascript&style=flat-square)](#)
-[![Package size](https://img.shields.io/npm/v/%40jliocsar/jstr?logo=npm&style=flat-square&color=222)](https://www.npmjs.com/package/@jliocsar/jstr)
+[![Documentation](https://img.shields.io/badge/docs-fff?logo=gitbook&logoColor=black&style=flat-square)](https://jliocsar.gitbook.io/jstr)
+[![JavaScript](https://img.shields.io/badge/javascript-100%25-fff?logo=javascript&style=flat-square&labelColor=black)](#)
+[![Package size](https://img.shields.io/npm/v/%40jliocsar/jstr?logo=npm&style=flat-square&color=fff&labelColor=black)](https://www.npmjs.com/package/@jliocsar/jstr)
 
 _Simple JavaScript CLI tool to read and parse JSON files_
 
