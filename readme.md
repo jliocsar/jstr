@@ -4,9 +4,9 @@
 
 # jstr
 
-[![Documentation](https://img.shields.io/badge/docs-eee?logo=gitbook&logoColor=111&style=flat-square)](https://jliocsar.gitbook.io/jstr)
-[![JavaScript](https://img.shields.io/badge/javascript-100%25-eee?logo=javascript&style=flat-square&labelColor=111)](#)
-[![Package size](https://img.shields.io/npm/v/%40jliocsar/jstr?logo=npm&style=flat-square&color=eee&labelColor=111)](https://www.npmjs.com/package/@jliocsar/jstr)
+[![Documentation](https://img.shields.io/badge/docs-EAE8E9?logo=gitbook&logoColor=2A252B&style=flat-square)](https://jliocsar.gitbook.io/jstr)
+[![JavaScript](https://img.shields.io/badge/javascript-100%25-EAE8E9?logo=javascript&style=flat-square&labelColor=2A252B)](#)
+[![Package size](https://img.shields.io/npm/v/%40jliocsar/jstr?logo=npm&style=flat-square&color=EAE8E9&labelColor=2A252B)](https://www.npmjs.com/package/@jliocsar/jstr)
 
 _Simple JavaScript CLI tool to read and parse JSON files_
 
@@ -16,6 +16,7 @@ _Simple JavaScript CLI tool to read and parse JSON files_
 - ⚡ **Fast**: Get parsed results or new JSON files in milliseconds;
 - 🦣 **Functional**: Have the benefits of functional programming in your JSON parsing tool (see [`ts-belt`](https://mobily.github.io/ts-belt/));
 - 🙅 **No BS**: Manipulate results with good ole' JavaScript, no need to learn cryptic languages/libraries -- use what fits you best.
+- 🌭 **Multi-platform**: Runs anywhere -- Linux, macOS & Windows; Read data from your clipboard, file or I/O.
 
 ## Description
 
@@ -46,6 +47,12 @@ jstr --version
 ```sh
 jstr.bun --version
 ```
+
+> **Note**
+>
+> Currently `jstr` runs faster in Node v20 against `jstr.bun` in Bun 1.0.3.
+>
+> Keep that in mind if you plan to use the Bun version.
 
 ---
 
