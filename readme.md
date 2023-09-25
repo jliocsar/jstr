@@ -24,6 +24,8 @@ _Simple JavaScript CLI tool to read and parse JSON files_
 
 It is a `JSON.parse`/`stringify` wrapper focused in CLI commands rather than JS scripts.
 
+[![BuyMeACoffee](https://www.buymeacoffee.com/assets/img/custom_images/purple_img.png)](https://www.buymeacoffee.com/jliocsar)
+
 ## Requirements
 
 To run `jstr`, you must have either [Node.js](https://nodejs.org/en/blog/release/v18.0.0) or [Bun](https://bun.sh/blog/bun-v1.0) ^v1.0.0 installed.
